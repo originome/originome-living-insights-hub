@@ -36,11 +36,13 @@ export const LocationInput: React.FC<LocationInputProps> = ({
           </Label>
           <Input
             id="location"
+            name="location"     // <--- ADDED name attribute
             type="text"
             placeholder="e.g., 10001, New York, or 40.7128,-74.0060"
             value={location}
             onChange={(e) => onLocationChange(e.target.value)}
             className="mt-1"
+            autoComplete="address-level2" // helps browser autofill (optional)
           />
           <div className="text-xs text-gray-500 mt-1">
             Enter zip code for fastest results, or city name/coordinates
@@ -51,7 +53,12 @@ export const LocationInput: React.FC<LocationInputProps> = ({
           <Label htmlFor="buildingType" className="text-sm font-medium">
             Building Type
           </Label>
-          <Select value={buildingType} onValueChange={onBuildingTypeChange}>
+          <Select
+            id="buildingType"
+            name="buildingType"  // <--- ADD these to pass through to the <select>
+            value={buildingType}
+            onValueChange={onBuildingTypeChange}
+          >
             <SelectTrigger className="mt-1">
               <SelectValue />
             </SelectTrigger>
@@ -72,7 +79,12 @@ export const LocationInput: React.FC<LocationInputProps> = ({
           <Label htmlFor="populationGroup" className="text-sm font-medium">
             Primary Occupant Group
           </Label>
-          <Select value={populationGroup} onValueChange={onPopulationGroupChange}>
+          <Select
+            id="populationGroup"
+            name="populationGroup" // <--- ADD these to pass through to the <select>
+            value={populationGroup}
+            onValueChange={onPopulationGroupChange}
+          >
             <SelectTrigger className="mt-1">
               <SelectValue />
             </SelectTrigger>
