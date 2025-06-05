@@ -56,31 +56,64 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
       let geocodeUrl = '';
       
       if (isZipCode(locationQuery)) {
-        // Enhanced zip code handling with country specification
-        geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&postalcode=${encodeURIComponent(locationQuery)}&country=US&limit=1&addressdetails=1`;
+        // Use more specific US zip code geocoding
+        geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&postalcode=${encodeURIComponent(locationQuery)}&limit=1&addressdetails=1`;
+        
+        const nominatimResponse = await fetch(geocodeUrl);
+        if (nominatimResponse.ok) {
+          const nominatimData = await nominatimResponse.json();
+          if (nominatimData.length > 0) {
+            const result = nominatimData[0];
+            return {
+              lat: parseFloat(result.lat),
+              lon: parseFloat(result.lon),
+              city: result.address?.city || result.address?.town || result.address?.village || result.address?.suburb || 'Unknown City',
+              region: result.address?.state || result.address?.county || '',
+              country: 'US',
+              zipCode: locationQuery
+            };
+          }
+        }
+        
+        // Fallback: try without country restriction for zip codes
+        geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationQuery + ' USA')}&limit=1&addressdetails=1`;
+        const fallbackResponse = await fetch(geocodeUrl);
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          if (fallbackData.length > 0) {
+            const result = fallbackData[0];
+            return {
+              lat: parseFloat(result.lat),
+              lon: parseFloat(result.lon),
+              city: result.address?.city || result.address?.town || result.address?.village || result.address?.suburb || 'Unknown City',
+              region: result.address?.state || result.address?.county || '',
+              country: 'US',
+              zipCode: locationQuery
+            };
+          }
+        }
       } else {
         // City name or coordinates
         geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationQuery)}&limit=1&addressdetails=1`;
-      }
-      
-      const nominatimResponse = await fetch(geocodeUrl);
-      
-      if (nominatimResponse.ok) {
-        const nominatimData = await nominatimResponse.json();
-        if (nominatimData.length > 0) {
-          const result = nominatimData[0];
-          return {
-            lat: parseFloat(result.lat),
-            lon: parseFloat(result.lon),
-            city: result.address?.city || result.address?.town || result.address?.village || result.display_name.split(',')[0],
-            region: result.address?.state || result.address?.county || '',
-            country: result.address?.country || 'US',
-            zipCode: result.address?.postcode || (isZipCode(locationQuery) ? locationQuery : undefined)
-          };
+        const nominatimResponse = await fetch(geocodeUrl);
+        
+        if (nominatimResponse.ok) {
+          const nominatimData = await nominatimResponse.json();
+          if (nominatimData.length > 0) {
+            const result = nominatimData[0];
+            return {
+              lat: parseFloat(result.lat),
+              lon: parseFloat(result.lon),
+              city: result.address?.city || result.address?.town || result.address?.village || result.display_name.split(',')[0],
+              region: result.address?.state || result.address?.county || '',
+              country: result.address?.country || 'US',
+              zipCode: result.address?.postcode
+            };
+          }
         }
       }
 
-      // Fallback for invalid location
+      // Ultimate fallback for invalid location
       console.warn('Location not found, using default');
       return {
         lat: 40.7128,

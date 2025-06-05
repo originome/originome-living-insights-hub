@@ -1,9 +1,9 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingDown, TrendingUp, AlertTriangle, Users } from 'lucide-react';
 import { ExternalData } from '@/hooks/useApiIntegration';
+import { LiteratureService } from '@/services/literatureService';
 
 interface PerformanceMetricsProps {
   environmentalParams: {
@@ -26,62 +26,55 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
   populationGroup
 }) => {
   const performanceImpacts = useMemo(() => {
-    let cognitiveImpact = 0;
-    let productivityImpact = 0;
-    let healthRisk = 'Low';
-    let absenteeismRisk = 0;
+    // Use real literature-based calculations
+    const cognitiveImpactCO2 = LiteratureService.calculateCognitiveImpact(environmentalParams.co2);
+    const pm25Impact = LiteratureService.calculatePM25Impact(environmentalParams.pm25);
+    const temperatureImpact = LiteratureService.calculateTemperatureImpact(environmentalParams.temperature, buildingType);
+    const lightingImpact = LiteratureService.calculateLightingImpact(environmentalParams.light, buildingType);
 
-    // CO2 impact (based on Allen et al. studies)
-    if (environmentalParams.co2 > 600) {
-      cognitiveImpact += Math.min((environmentalParams.co2 - 600) / 40, 30);
-    }
-
-    // Indoor PM2.5 vs outdoor correlation
-    const outdoorPM25 = externalData.airQuality?.pm25 || 0;
-    const indoorPM25 = Math.max(environmentalParams.pm25, outdoorPM25 * 0.6);
+    // Combine cognitive impacts (literature-based)
+    const totalCognitiveImpact = cognitiveImpactCO2 + pm25Impact.cognitive;
     
-    if (indoorPM25 > 10) {
-      cognitiveImpact += (indoorPM25 - 10) * 0.6;
-      absenteeismRisk += (indoorPM25 - 10) * 0.8;
+    // Productivity impact (Seppänen & Fisk study + lighting effects)
+    const productivityImpact = temperatureImpact + lightingImpact;
+
+    // Health risk calculation based on PM2.5 and external conditions
+    const outdoorPM25 = externalData.airQuality?.pm25 || 0;
+    const effectivePM25 = Math.max(environmentalParams.pm25, outdoorPM25 * 0.6);
+    
+    let healthRisk = 'Low';
+    if (effectivePM25 > 35 || environmentalParams.co2 > 1000) {
+      healthRisk = 'High';
+    } else if (effectivePM25 > 15 || environmentalParams.co2 > 800) {
+      healthRisk = 'Moderate';
     }
 
-    // Temperature impact with building type adjustments
-    const optimalTemp = buildingType === 'school' ? 20 : 21;
-    const tempDiff = Math.abs(environmentalParams.temperature - optimalTemp);
-    if (tempDiff > 1) {
-      productivityImpact += (tempDiff - 1) * 2;
-    }
-
-    // Population group adjustments
-    if (populationGroup === 'elderly') {
-      cognitiveImpact *= 1.3;
-      healthRisk = cognitiveImpact > 15 ? 'High' : cognitiveImpact > 8 ? 'Moderate' : 'Low';
-    } else if (populationGroup === 'children') {
-      cognitiveImpact *= 1.2;
-      absenteeismRisk *= 1.4;
-    }
-
-    // Viral activity impact on absenteeism
+    // Absenteeism calculation (Zhang et al. study + viral activity)
+    const baseAbsenteeism = pm25Impact.health * 0.3; // Convert mortality risk to absenteeism
     const viralMultiplier = {
       'Low': 1,
       'Medium': 1.5,
       'High': 2.2
     }[externalData.healthSurveillance?.viralActivity || 'Low'];
     
-    absenteeismRisk *= viralMultiplier;
+    const absenteeismRisk = baseAbsenteeism * viralMultiplier;
 
-    // Determine health risk
-    if (cognitiveImpact > 20 || indoorPM25 > 50 || viralMultiplier > 2) {
-      healthRisk = 'High';
-    } else if (cognitiveImpact > 10 || indoorPM25 > 25 || viralMultiplier > 1.3) {
-      healthRisk = 'Moderate';
-    }
+    // Population-specific adjustments based on literature
+    const populationMultipliers = {
+      elderly: { cognitive: 1.3, health: 1.4, absenteeism: 1.2 },
+      children: { cognitive: 1.1, health: 1.2, absenteeism: 1.4 },
+      vulnerable: { cognitive: 1.4, health: 1.6, absenteeism: 1.5 },
+      students: { cognitive: 1.0, health: 0.9, absenteeism: 1.1 },
+      adults: { cognitive: 1.0, health: 1.0, absenteeism: 1.0 }
+    };
+
+    const multiplier = populationMultipliers[populationGroup as keyof typeof populationMultipliers] || populationMultipliers.adults;
 
     return {
-      cognitive: Math.round(cognitiveImpact),
-      productivity: Math.round(productivityImpact),
+      cognitive: Math.round(Math.abs(totalCognitiveImpact) * multiplier.cognitive),
+      productivity: Math.round(Math.abs(productivityImpact) * multiplier.cognitive),
       health: healthRisk,
-      absenteeism: Math.round(absenteeismRisk)
+      absenteeism: Math.round(Math.abs(absenteeismRisk) * multiplier.absenteeism)
     };
   }, [environmentalParams, externalData, buildingType, populationGroup]);
 
