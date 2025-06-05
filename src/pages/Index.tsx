@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { LocationInput } from '@/components/LocationInput';
 import { CurrentConditions } from '@/components/CurrentConditions';
-// ... other imports
+import './index.css'
+
 
 import { useApiIntegration } from '@/hooks/useApiIntegration';
 import { useToast } from '@/hooks/use-toast';
