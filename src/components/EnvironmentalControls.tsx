@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -33,7 +32,7 @@ export const EnvironmentalControls: React.FC<EnvironmentalControlsProps> = ({
       unit: 'ppm',
       min: 400,
       max: 2000,
-      optimal: [400, 800],
+      optimal: [400, 800] as [number, number],
       icon: Wind,
       color: params.co2 > 800 ? 'text-red-600' : params.co2 > 600 ? 'text-yellow-600' : 'text-green-600'
     },
@@ -44,7 +43,7 @@ export const EnvironmentalControls: React.FC<EnvironmentalControlsProps> = ({
       unit: 'μg/m³',
       min: 0,
       max: 250,
-      optimal: [0, 12],
+      optimal: [0, 12] as [number, number],
       icon: Wind,
       color: params.pm25 > 35 ? 'text-red-600' : params.pm25 > 12 ? 'text-yellow-600' : 'text-green-600',
       external: externalData.airQuality?.pm25
@@ -56,7 +55,7 @@ export const EnvironmentalControls: React.FC<EnvironmentalControlsProps> = ({
       unit: '°C',
       min: 16,
       max: 30,
-      optimal: [20, 22],
+      optimal: [20, 22] as [number, number],
       icon: Thermometer,
       color: Math.abs(params.temperature - 21) > 2 ? 'text-red-600' : Math.abs(params.temperature - 21) > 1 ? 'text-yellow-600' : 'text-green-600',
       external: externalData.weather?.temperature
@@ -68,7 +67,7 @@ export const EnvironmentalControls: React.FC<EnvironmentalControlsProps> = ({
       unit: 'lux',
       min: 100,
       max: 2000,
-      optimal: [500, 1000],
+      optimal: [500, 1000] as [number, number],
       icon: Lightbulb,
       color: params.light < 300 ? 'text-red-600' : params.light < 500 ? 'text-yellow-600' : 'text-green-600'
     },
@@ -79,7 +78,7 @@ export const EnvironmentalControls: React.FC<EnvironmentalControlsProps> = ({
       unit: 'dB',
       min: 30,
       max: 80,
-      optimal: [30, 50],
+      optimal: [30, 50] as [number, number],
       icon: Volume2,
       color: params.noise > 60 ? 'text-red-600' : params.noise > 50 ? 'text-yellow-600' : 'text-green-600'
     },
@@ -90,7 +89,7 @@ export const EnvironmentalControls: React.FC<EnvironmentalControlsProps> = ({
       unit: '%',
       min: 20,
       max: 80,
-      optimal: [40, 60],
+      optimal: [40, 60] as [number, number],
       icon: Droplet,
       color: params.humidity < 30 || params.humidity > 70 ? 'text-red-600' : params.humidity < 40 || params.humidity > 60 ? 'text-yellow-600' : 'text-green-600',
       external: externalData.weather?.humidity
