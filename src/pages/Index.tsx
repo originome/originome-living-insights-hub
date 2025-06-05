@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LocationInput } from '@/components/LocationInput';
 import { CurrentConditions } from '@/components/CurrentConditions';
-import './index.css'
 
 
 import { useApiIntegration } from '@/hooks/useApiIntegration';
