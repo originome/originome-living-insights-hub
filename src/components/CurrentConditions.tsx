@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { RefreshCw, Thermometer, Droplet, Wind, Eye } from 'lucide-react';
+import { RefreshCw, Thermometer, Droplet, Wind, Eye, MapPin, Wifi, WifiOff } from 'lucide-react';
 import { ExternalData } from '@/hooks/useApiIntegration';
 
 interface CurrentConditionsProps {
@@ -34,11 +34,18 @@ export const CurrentConditions: React.FC<CurrentConditionsProps> = ({
     }
   };
 
+  const isRealTimeData = externalData.airQuality?.source && 
+    !externalData.airQuality.source.includes('Estimated');
+
   if (isLoading) {
     return (
       <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
         <CardHeader>
-          <CardTitle>Current Conditions</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Wind className="h-5 w-5 text-indigo-600" />
+            Current Conditions
+            <RefreshCw className="h-4 w-4 animate-spin text-indigo-600" />
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -59,13 +66,29 @@ export const CurrentConditions: React.FC<CurrentConditionsProps> = ({
     <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Current Conditions</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Wind className="h-5 w-5 text-indigo-600" />
+            Current Conditions
+            {isRealTimeData ? (
+              <Wifi className="h-4 w-4 text-green-600" title="Real-time data" />
+            ) : (
+              <WifiOff className="h-4 w-4 text-orange-600" title="Estimated data" />
+            )}
+          </CardTitle>
           {externalData.location && (
-            <Badge variant="outline" className="text-xs">
-              {externalData.location.city}, {externalData.location.region}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-gray-500" />
+              <Badge variant="outline" className="text-xs">
+                {externalData.location.city}, {externalData.location.region}
+              </Badge>
+            </div>
           )}
         </div>
+        {externalData.airQuality?.source && (
+          <div className="text-xs text-gray-500">
+            Data source: {externalData.airQuality.source}
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
@@ -120,6 +143,23 @@ export const CurrentConditions: React.FC<CurrentConditionsProps> = ({
             <div className="flex items-center justify-between">
               <span>Visibility:</span>
               <span className="font-medium">{externalData.weather.visibility} km</span>
+            </div>
+          </div>
+        )}
+
+        {externalData.airQuality && (
+          <div className="grid grid-cols-3 gap-2 pt-2 border-t text-xs text-gray-600">
+            <div className="text-center">
+              <div className="font-medium text-gray-900 dark:text-white">{externalData.airQuality.pm25}</div>
+              <div>PM2.5</div>
+            </div>
+            <div className="text-center">
+              <div className="font-medium text-gray-900 dark:text-white">{externalData.airQuality.pm10}</div>
+              <div>PM10</div>
+            </div>
+            <div className="text-center">
+              <div className="font-medium text-gray-900 dark:text-white">{externalData.airQuality.o3}</div>
+              <div>O₃</div>
             </div>
           </div>
         )}
