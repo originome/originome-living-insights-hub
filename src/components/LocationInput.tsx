@@ -34,16 +34,19 @@ export const LocationInput: React.FC<LocationInputProps> = ({
       <CardContent className="space-y-4">
         <div>
           <Label htmlFor="location" className="text-sm font-medium">
-            Location
+            Location (Zip Code, City, or Coordinates)
           </Label>
           <Input
             id="location"
             type="text"
-            placeholder="Enter city name or coordinates"
+            placeholder="e.g., 10001, New York, or 40.7128,-74.0060"
             value={location}
             onChange={(e) => onLocationChange(e.target.value)}
             className="mt-1"
           />
+          <div className="text-xs text-gray-500 mt-1">
+            Enter zip code for fastest results, or city name/coordinates
+          </div>
         </div>
         
         <div>
@@ -55,29 +58,33 @@ export const LocationInput: React.FC<LocationInputProps> = ({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="office">Office</SelectItem>
-              <SelectItem value="school">School</SelectItem>
+              <SelectItem value="office">Office Building</SelectItem>
+              <SelectItem value="school">School/University</SelectItem>
               <SelectItem value="residential">Residential</SelectItem>
-              <SelectItem value="healthcare">Healthcare</SelectItem>
-              <SelectItem value="retail">Retail</SelectItem>
-              <SelectItem value="warehouse">Warehouse</SelectItem>
+              <SelectItem value="healthcare">Healthcare Facility</SelectItem>
+              <SelectItem value="retail">Retail/Commercial</SelectItem>
+              <SelectItem value="warehouse">Warehouse/Industrial</SelectItem>
+              <SelectItem value="hospitality">Hotel/Restaurant</SelectItem>
+              <SelectItem value="laboratory">Laboratory/Research</SelectItem>
             </SelectContent>
           </Select>
         </div>
         
         <div>
           <Label htmlFor="populationGroup" className="text-sm font-medium">
-            Population Group
+            Primary Occupant Group
           </Label>
           <Select value={populationGroup} onValueChange={onPopulationGroupChange}>
             <SelectTrigger className="mt-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="adults">Adults (18-64)</SelectItem>
+              <SelectItem value="adults">Working Adults (18-64)</SelectItem>
               <SelectItem value="children">Children (5-17)</SelectItem>
               <SelectItem value="elderly">Elderly (65+)</SelectItem>
+              <SelectItem value="students">College Students (18-25)</SelectItem>
               <SelectItem value="mixed">Mixed Population</SelectItem>
+              <SelectItem value="vulnerable">Vulnerable/At-Risk Groups</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -32,7 +32,7 @@ const Index = () => {
     lastUpdated,
     error,
     refreshData
-  } = useApiIntegration(location);
+  } = useApiIntegration(location, buildingType, populationGroup);
 
   const handleLocationChange = (newLocation: string) => {
     setLocation(newLocation);
@@ -40,6 +40,26 @@ const Index = () => {
       toast({
         title: "Location Updated",
         description: "Fetching real-time environmental data...",
+      });
+    }
+  };
+
+  const handleBuildingTypeChange = (newType: string) => {
+    setBuildingType(newType);
+    if (location) {
+      toast({
+        title: "Building Type Updated",
+        description: "Recalculating health risks and recommendations...",
+      });
+    }
+  };
+
+  const handlePopulationGroupChange = (newGroup: string) => {
+    setPopulationGroup(newGroup);
+    if (location) {
+      toast({
+        title: "Population Group Updated", 
+        description: "Adjusting risk assessments for target population...",
       });
     }
   };
@@ -77,8 +97,8 @@ const Index = () => {
             buildingType={buildingType}
             populationGroup={populationGroup}
             onLocationChange={handleLocationChange}
-            onBuildingTypeChange={setBuildingType}
-            onPopulationGroupChange={setPopulationGroup}
+            onBuildingTypeChange={handleBuildingTypeChange}
+            onPopulationGroupChange={handlePopulationGroupChange}
           />
           
           <CurrentConditions 

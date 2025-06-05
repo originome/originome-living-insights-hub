@@ -70,9 +70,9 @@ export const CurrentConditions: React.FC<CurrentConditionsProps> = ({
             <Wind className="h-5 w-5 text-indigo-600" />
             Current Conditions
             {isRealTimeData ? (
-              <Wifi className="h-4 w-4 text-green-600" title="Real-time data" />
+              <Wifi className="h-4 w-4 text-green-600" />
             ) : (
-              <WifiOff className="h-4 w-4 text-orange-600" title="Estimated data" />
+              <WifiOff className="h-4 w-4 text-orange-600" />
             )}
           </CardTitle>
           {externalData.location && (
