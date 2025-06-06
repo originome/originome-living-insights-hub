@@ -2,15 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { LocationInput } from '@/components/LocationInput';
 import { CurrentConditions } from '@/components/CurrentConditions';
+import { OriginomeHeader } from '@/components/OriginomeHeader';
 import { EnvironmentalControls } from '@/components/EnvironmentalControls';
 import { PerformanceMetrics } from '@/components/PerformanceMetrics';
 import { ChartAnalysis } from '@/components/ChartAnalysis';
 import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { CostBenefitAnalysis } from '@/components/CostBenefitAnalysis';
 import { LiteratureDatabase } from '@/components/LiteratureDatabase';
+import { LiteratureCitations } from '@/components/LiteratureCitations';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useApiIntegration } from '@/hooks/useApiIntegration';
 import { useToast } from '@/hooks/use-toast';
+import { LiteratureService } from '@/services/literatureService';
 
 const Index = () => {
   const { toast } = useToast();
@@ -39,7 +42,7 @@ const Index = () => {
     if (newLocation) {
       toast({
         title: "Location Updated",
-        description: "Fetching real-time environmental data...",
+        description: "Fetching real-time environmental data and peer benchmarks...",
       });
     }
   };
@@ -49,7 +52,7 @@ const Index = () => {
     if (location) {
       toast({
         title: "Building Type Updated",
-        description: "Recalculating health risks and recommendations...",
+        description: "Recalculating health risks and productivity impacts...",
       });
     }
   };
@@ -59,7 +62,7 @@ const Index = () => {
     if (location) {
       toast({
         title: "Population Group Updated", 
-        description: "Adjusting risk assessments for target population...",
+        description: "Adjusting risk assessments for target demographics...",
       });
     }
   };
@@ -81,8 +84,51 @@ const Index = () => {
     }
   }, [error, toast]);
 
+  // Get relevant literature citations for current parameters
+  const getRelevantCitations = () => {
+    const citations = [];
+    
+    // CO2 studies if elevated
+    if (environmentalParams.co2 > 600) {
+      const co2Studies = LiteratureService.getStudiesForParameter('co2');
+      citations.push(...co2Studies.map(study => ({
+        study,
+        relevantTo: `CO₂ levels of ${environmentalParams.co2}ppm impact cognitive performance`
+      })));
+    }
+
+    // PM2.5 studies if concerning
+    if (environmentalParams.pm25 > 12) {
+      const pm25Studies = LiteratureService.getStudiesForParameter('pm25');
+      citations.push(...pm25Studies.map(study => ({
+        study,
+        relevantTo: `PM2.5 levels of ${environmentalParams.pm25}μg/m³ affect health and cognition`
+      })));
+    }
+
+    // Temperature studies if suboptimal
+    if (Math.abs(environmentalParams.temperature - 21) > 1) {
+      const tempStudies = LiteratureService.getStudiesForParameter('temperature');
+      citations.push(...tempStudies.map(study => ({
+        study,
+        relevantTo: `Temperature of ${environmentalParams.temperature}°C impacts productivity`
+      })));
+    }
+
+    return citations.slice(0, 3); // Show top 3 most relevant
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      {/* Originome Branded Header */}
+      <OriginomeHeader 
+        location={externalData.location}
+        buildingType={buildingType}
+        populationGroup={populationGroup}
+        lastUpdated={lastUpdated}
+      />
+      
+      {/* Original Dashboard Header */}
       <DashboardHeader 
         lastUpdated={lastUpdated}
         onRefresh={refreshData}
@@ -90,7 +136,7 @@ const Index = () => {
       />
       
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Location and Building Settings */}
+        {/* Configuration Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <LocationInput
             location={location}
@@ -122,13 +168,17 @@ const Index = () => {
           externalData={externalData}
         />
 
-        {/* Charts and Analysis */}
+        {/* Analysis and Insights Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartAnalysis 
-            environmentalParams={environmentalParams}
-            externalData={externalData}
-            buildingType={buildingType}
-          />
+          <div className="space-y-6">
+            <ChartAnalysis 
+              environmentalParams={environmentalParams}
+              externalData={externalData}
+              buildingType={buildingType}
+            />
+            
+            <LiteratureCitations citations={getRelevantCitations()} />
+          </div>
           
           <div className="space-y-6">
             <SmartRecommendations 
