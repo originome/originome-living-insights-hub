@@ -1,11 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import { LocationInput } from '@/components/LocationInput';
 import { CurrentConditions } from '@/components/CurrentConditions';
-// ... other imports
-
+import { EnvironmentalControls } from '@/components/EnvironmentalControls';
+import { PerformanceMetrics } from '@/components/PerformanceMetrics';
+import { ChartAnalysis } from '@/components/ChartAnalysis';
+import { SmartRecommendations } from '@/components/SmartRecommendations';
+import { CostBenefitAnalysis } from '@/components/CostBenefitAnalysis';
+import { LiteratureDatabase } from '@/components/LiteratureDatabase';
+import { DashboardHeader } from '@/components/DashboardHeader';
 import { useApiIntegration } from '@/hooks/useApiIntegration';
 import { useToast } from '@/hooks/use-toast';
-import { DashboardHeader } from '@/components/DashboardHeader';
 
 const Index = () => {
   const { toast } = useToast();
@@ -83,7 +88,9 @@ const Index = () => {
         onRefresh={refreshData}
         isLoading={isLoading}
       />
+      
       <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Location and Building Settings */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <LocationInput
             location={location}
@@ -93,14 +100,54 @@ const Index = () => {
             onBuildingTypeChange={handleBuildingTypeChange}
             onPopulationGroupChange={handlePopulationGroupChange}
           />
+          
           <CurrentConditions 
             externalData={externalData}
             isLoading={isLoading}
             onRefresh={refreshData}
           />
-          {/* ...other dashboard components */}
+          
+          <PerformanceMetrics 
+            environmentalParams={environmentalParams}
+            externalData={externalData}
+            buildingType={buildingType}
+            populationGroup={populationGroup}
+          />
         </div>
-        {/* ...other dashboard components */}
+
+        {/* Environmental Controls */}
+        <EnvironmentalControls
+          params={environmentalParams}
+          onParamChange={handleParamChange}
+          externalData={externalData}
+        />
+
+        {/* Charts and Analysis */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartAnalysis 
+            environmentalParams={environmentalParams}
+            externalData={externalData}
+            buildingType={buildingType}
+          />
+          
+          <div className="space-y-6">
+            <SmartRecommendations 
+              environmentalParams={environmentalParams}
+              externalData={externalData}
+              buildingType={buildingType}
+              populationGroup={populationGroup}
+            />
+            
+            <CostBenefitAnalysis 
+              environmentalParams={environmentalParams}
+              externalData={externalData}
+              buildingType={buildingType}
+            />
+          </div>
+        </div>
+
+        {/* Literature Database */}
+        <LiteratureDatabase />
       </div>
     </div>
   );

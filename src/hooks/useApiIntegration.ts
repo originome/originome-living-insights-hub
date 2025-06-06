@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 
 export interface ExternalData {
@@ -46,13 +47,18 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const isZipCode = (query: string): boolean => /^\d{5}(-\d{4})?$/.test(query.trim());
+  const isZipCode = (query: string): boolean => {
+    return /^\d{5}(-\d{4})?$/.test(query.trim());
+  };
 
   const fetchLocationData = async (locationQuery: string) => {
     try {
       let geocodeUrl = '';
+      
       if (isZipCode(locationQuery)) {
+        // Use more specific US zip code geocoding
         geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&postalcode=${encodeURIComponent(locationQuery)}&limit=1&addressdetails=1`;
+        
         const nominatimResponse = await fetch(geocodeUrl);
         if (nominatimResponse.ok) {
           const nominatimData = await nominatimResponse.json();
@@ -68,6 +74,8 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
             };
           }
         }
+        
+        // Fallback: try without country restriction for zip codes
         geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationQuery + ' USA')}&limit=1&addressdetails=1`;
         const fallbackResponse = await fetch(geocodeUrl);
         if (fallbackResponse.ok) {
@@ -85,8 +93,10 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
           }
         }
       } else {
+        // City name or coordinates
         geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationQuery)}&limit=1&addressdetails=1`;
         const nominatimResponse = await fetch(geocodeUrl);
+        
         if (nominatimResponse.ok) {
           const nominatimData = await nominatimResponse.json();
           if (nominatimData.length > 0) {
@@ -102,6 +112,9 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
           }
         }
       }
+
+      // Ultimate fallback for invalid location
+      console.warn('Location not found, using default');
       return {
         lat: 40.7128,
         lon: -74.0060,
@@ -110,6 +123,7 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
         country: 'US'
       };
     } catch (err) {
+      console.error('Geocoding error:', err);
       return {
         lat: 40.7128,
         lon: -74.0060,
@@ -122,7 +136,11 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
 
   const fetchAirQuality = async (lat: number, lon: number) => {
     try {
-      const waqiResponse = await fetch(`https://api.waqi.info/feed/geo:${lat};${lon}/?token=demo`);
+      // Try WAQI first (World Air Quality Index)
+      const waqiResponse = await fetch(
+        `https://api.waqi.info/feed/geo:${lat};${lon}/?token=demo`
+      );
+      
       if (waqiResponse.ok) {
         const waqiData = await waqiResponse.json();
         if (waqiData.status === 'ok' && waqiData.data) {
@@ -139,19 +157,26 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
           };
         }
       }
-      const openaqResponse = await fetch(`https://api.openaq.org/v2/latest?limit=1&coordinates=${lat},${lon}&radius=25000&order_by=lastUpdated&sort=desc`);
+
+      // Fallback to OpenAQ
+      const openaqResponse = await fetch(
+        `https://api.openaq.org/v2/latest?limit=1&coordinates=${lat},${lon}&radius=25000&order_by=lastUpdated&sort=desc`
+      );
+      
       if (openaqResponse.ok) {
         const openaqData = await openaqResponse.json();
         if (openaqData.results && openaqData.results.length > 0) {
           const result = openaqData.results[0];
           const measurements = result.measurements;
+          
           const getParameterValue = (parameter: string) => {
             const measurement = measurements.find((m: any) => m.parameter === parameter);
             return measurement ? Math.round(measurement.value) : 0;
           };
+
           const pm25 = getParameterValue('pm25');
           return {
-            aqi: Math.round(pm25 * 2),
+            aqi: Math.round(pm25 * 2), // Rough AQI calculation
             pm25,
             pm10: getParameterValue('pm10'),
             o3: getParameterValue('o3'),
@@ -162,9 +187,13 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
           };
         }
       }
-      const urbanFactor = lat > 40 ? 1.4 : 1.0;
+
+      // Location-based estimation if APIs fail
+      console.warn('Air quality APIs unavailable, using location-based estimates');
+      const urbanFactor = lat > 40 ? 1.4 : 1.0; // Higher pollution in northern cities
       const baseAQI = Math.floor(Math.random() * 40) + 40;
       const adjustedAQI = Math.round(baseAQI * urbanFactor);
+      
       return {
         aqi: adjustedAQI,
         pm25: Math.round(adjustedAQI * 0.4) + Math.floor(Math.random() * 15),
@@ -176,17 +205,22 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
         source: 'Estimated (API Limited)'
       };
     } catch (err) {
+      console.error('Air quality fetch error:', err);
       return null;
     }
   };
 
   const fetchWeatherData = async (lat: number, lon: number) => {
     try {
-      const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,uv_index&hourly=visibility&timezone=auto`);
+      const response = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,uv_index&hourly=visibility&timezone=auto`
+      );
+      
       if (response.ok) {
         const data = await response.json();
         const current = data.current;
         const hourly = data.hourly;
+        
         return {
           temperature: Math.round(current.temperature_2m),
           humidity: current.relative_humidity_2m,
@@ -196,8 +230,14 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
           visibility: hourly.visibility ? Math.round(hourly.visibility[0] / 1000) : 10
         };
       }
+
+      // Fallback weather data
+      console.warn('Weather API unavailable, using seasonal estimates');
       const month = new Date().getMonth();
-      const seasonalTemp = month >= 3 && month <= 8 ? Math.floor(Math.random() * 15) + 20 : Math.floor(Math.random() * 15) + 5;
+      const seasonalTemp = month >= 3 && month <= 8 ? 
+        Math.floor(Math.random() * 15) + 20 : // Spring/Summer
+        Math.floor(Math.random() * 15) + 5;   // Fall/Winter
+      
       return {
         temperature: seasonalTemp,
         humidity: Math.floor(Math.random() * 30) + 40,
@@ -207,29 +247,54 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
         visibility: Math.floor(Math.random() * 10) + 8
       };
     } catch (err) {
+      console.error('Weather fetch error:', err);
       return null;
     }
   };
 
   const fetchHealthSurveillance = async (region: string, country: string, buildingType?: string, populationGroup?: string) => {
     try {
+      // Enhanced health surveillance with building/population context
       const currentMonth = new Date().getMonth();
       const isWinterMonth = currentMonth >= 10 || currentMonth <= 2;
+      
+      // Building type risk factors
       const buildingRiskFactors = {
-        'school': 1.3, 'healthcare': 1.2, 'office': 1.0, 'residential': 0.8, 'retail': 1.1, 'warehouse': 0.7, 'hospitality': 1.4, 'laboratory': 0.9
+        'school': 1.3, // Higher transmission in schools
+        'healthcare': 1.2,
+        'office': 1.0,
+        'residential': 0.8,
+        'retail': 1.1,
+        'warehouse': 0.7,
+        'hospitality': 1.4,
+        'laboratory': 0.9
       };
+      
+      // Population group risk factors
       const populationRiskFactors = {
-        'children': 1.2, 'elderly': 1.4, 'vulnerable': 1.5, 'students': 1.1, 'adults': 1.0, 'mixed': 1.1
+        'children': 1.2,
+        'elderly': 1.4,
+        'vulnerable': 1.5,
+        'students': 1.1,
+        'adults': 1.0,
+        'mixed': 1.1
       };
+      
       const buildingFactor = buildingRiskFactors[buildingType as keyof typeof buildingRiskFactors] || 1.0;
       const populationFactor = populationRiskFactors[populationGroup as keyof typeof populationRiskFactors] || 1.0;
       const combinedFactor = (buildingFactor + populationFactor) / 2;
-      let baseViralLevel = isWinterMonth ? 2 : 1;
+      
+      let baseViralLevel = isWinterMonth ? 2 : 1; // 0=Low, 1=Medium, 2=High
       baseViralLevel = Math.min(2, Math.round(baseViralLevel * combinedFactor));
+      
       const viralLevels: Array<'Low' | 'Medium' | 'High'> = ['Low', 'Medium', 'High'];
       const fluLevels: Array<'Minimal' | 'Low' | 'Moderate' | 'High'> = ['Minimal', 'Low', 'Moderate', 'High'];
+      
       const viralActivity = viralLevels[baseViralLevel];
-      const fluActivity = isWinterMonth ? fluLevels[Math.min(3, baseViralLevel + 1)] : fluLevels[Math.max(0, baseViralLevel - 1)];
+      const fluActivity = isWinterMonth ? 
+        fluLevels[Math.min(3, baseViralLevel + 1)] : 
+        fluLevels[Math.max(0, baseViralLevel - 1)];
+      
       return {
         viralActivity,
         respiratoryIllness: Math.round((Math.random() * 10 + 5) * combinedFactor),
@@ -237,26 +302,43 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
         riskLevel: Math.round((Math.random() * 5 + 3) * combinedFactor)
       };
     } catch (err) {
+      console.error('Health surveillance fetch error:', err);
       return null;
     }
   };
 
   const refreshData = useCallback(async () => {
     if (!location) return;
+    
     setIsLoading(true);
     setError(null);
+    
     try {
+      console.log('Fetching real-time data for:', { location, buildingType, populationGroup });
+      
       const locationData = await fetchLocationData(location);
+      console.log('Location resolved:', locationData);
+      
       const [airQuality, weather, healthSurveillance] = await Promise.all([
         fetchAirQuality(locationData.lat, locationData.lon),
         fetchWeatherData(locationData.lat, locationData.lon),
         fetchHealthSurveillance(locationData.region, locationData.country, buildingType, populationGroup)
       ]);
-      setExternalData({ airQuality, weather, healthSurveillance, location: locationData });
+      
+      setExternalData({
+        airQuality,
+        weather,
+        healthSurveillance,
+        location: locationData
+      });
+      
       setLastUpdated(new Date());
+      console.log('Data refresh completed successfully');
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch external data';
       setError(errorMessage);
+      console.error('Data fetch error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -264,7 +346,10 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
 
   useEffect(() => {
     if (!location) return;
+    
     refreshData();
+    
+    // Auto-refresh every 10 minutes for real-time data
     const interval = setInterval(refreshData, 10 * 60 * 1000);
     return () => clearInterval(interval);
   }, [location, buildingType, populationGroup, refreshData]);
