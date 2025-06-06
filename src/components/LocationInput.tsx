@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { MapPin, Search } from 'lucide-react';
 
 interface LocationInputProps {
   location: string;
@@ -23,6 +24,59 @@ export const LocationInput: React.FC<LocationInputProps> = ({
   onBuildingTypeChange,
   onPopulationGroupChange
 }) => {
+  const [inputValue, setInputValue] = useState(location);
+  const [isValidLocation, setIsValidLocation] = useState(false);
+
+  // Validate location input
+  const validateLocation = (value: string) => {
+    const trimmedValue = value.trim();
+    
+    // US ZIP code (5 digits or 5+4 format)
+    const zipPattern = /^\d{5}(-\d{4})?$/;
+    
+    // At least 2 characters for city names or coordinates
+    const cityPattern = /^[a-zA-Z\s,.-]{2,}$/;
+    
+    // Coordinates pattern (lat,lon)
+    const coordPattern = /^-?\d+\.?\d*,-?\d+\.?\d*$/;
+    
+    return zipPattern.test(trimmedValue) || 
+           cityPattern.test(trimmedValue) || 
+           coordPattern.test(trimmedValue);
+  };
+
+  // Handle input changes with validation
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    setIsValidLocation(validateLocation(value));
+  };
+
+  // Handle search/submit
+  const handleSearch = () => {
+    const trimmedValue = inputValue.trim();
+    if (isValidLocation && trimmedValue !== location) {
+      onLocationChange(trimmedValue);
+    }
+  };
+
+  // Handle Enter key
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  // Auto-search for valid US zip codes
+  useEffect(() => {
+    const zipPattern = /^\d{5}(-\d{4})?$/;
+    if (zipPattern.test(inputValue.trim()) && inputValue.trim() !== location) {
+      const timer = setTimeout(() => {
+        onLocationChange(inputValue.trim());
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [inputValue, location, onLocationChange]);
+
   return (
     <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
       <CardHeader>
@@ -34,18 +88,32 @@ export const LocationInput: React.FC<LocationInputProps> = ({
       <CardContent className="space-y-4">
         <div>
           <Label htmlFor="location" className="text-sm font-medium">
-            Location (Zip Code, City, or Coordinates)
+            Location (US Zip Code, City, or Coordinates)
           </Label>
-          <Input
-            id="location"
-            type="text"
-            placeholder="e.g., 10001, New York, or 40.7128,-74.0060"
-            value={location}
-            onChange={(e) => onLocationChange(e.target.value)}
-            className="mt-1"
-          />
+          <div className="flex gap-2 mt-1">
+            <Input
+              id="location"
+              type="text"
+              placeholder="e.g., 60607, Chicago IL, or 41.8781,-87.6298"
+              value={inputValue}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className={`flex-1 ${!isValidLocation && inputValue ? 'border-red-300' : ''}`}
+            />
+            <Button 
+              onClick={handleSearch}
+              disabled={!isValidLocation || inputValue.trim() === location}
+              size="sm"
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+          </div>
           <div className="text-xs text-gray-500 mt-1">
-            Enter zip code for fastest results, or city name/coordinates
+            {inputValue && !isValidLocation ? 
+              'Please enter a valid US ZIP code (e.g., 60607), city name, or coordinates' :
+              'ZIP codes provide the most accurate results'
+            }
           </div>
         </div>
         

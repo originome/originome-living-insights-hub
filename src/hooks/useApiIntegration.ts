@@ -47,37 +47,44 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const isZipCode = (query: string): boolean => {
+  const isUSZipCode = (query: string): boolean => {
     return /^\d{5}(-\d{4})?$/.test(query.trim());
   };
 
   const fetchLocationData = async (locationQuery: string) => {
     try {
-      let geocodeUrl = '';
+      const trimmedQuery = locationQuery.trim();
       
-      if (isZipCode(locationQuery)) {
-        // Use more specific US zip code geocoding
-        geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&postalcode=${encodeURIComponent(locationQuery)}&limit=1&addressdetails=1`;
+      if (isUSZipCode(trimmedQuery)) {
+        console.log('Fetching US ZIP code:', trimmedQuery);
         
-        const nominatimResponse = await fetch(geocodeUrl);
-        if (nominatimResponse.ok) {
-          const nominatimData = await nominatimResponse.json();
-          if (nominatimData.length > 0) {
-            const result = nominatimData[0];
+        // For US ZIP codes, use specialized geocoding
+        const zipResponse = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&postalcode=${encodeURIComponent(trimmedQuery)}&addressdetails=1&limit=1`
+        );
+        
+        if (zipResponse.ok) {
+          const zipData = await zipResponse.json();
+          if (zipData.length > 0) {
+            const result = zipData[0];
+            console.log('ZIP geocoding result:', result);
+            
             return {
               lat: parseFloat(result.lat),
               lon: parseFloat(result.lon),
-              city: result.address?.city || result.address?.town || result.address?.village || result.address?.suburb || 'Unknown City',
+              city: result.address?.city || result.address?.town || result.address?.village || 'Unknown City',
               region: result.address?.state || result.address?.county || '',
               country: 'US',
-              zipCode: locationQuery
+              zipCode: trimmedQuery
             };
           }
         }
         
-        // Fallback: try without country restriction for zip codes
-        geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationQuery + ' USA')}&limit=1&addressdetails=1`;
-        const fallbackResponse = await fetch(geocodeUrl);
+        // Fallback for ZIP: try with "USA" appended
+        const fallbackResponse = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(trimmedQuery + ' USA')}&addressdetails=1&limit=1`
+        );
+        
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
           if (fallbackData.length > 0) {
@@ -85,22 +92,33 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
             return {
               lat: parseFloat(result.lat),
               lon: parseFloat(result.lon),
-              city: result.address?.city || result.address?.town || result.address?.village || result.address?.suburb || 'Unknown City',
+              city: result.address?.city || result.address?.town || result.address?.village || 'Unknown City',
               region: result.address?.state || result.address?.county || '',
               country: 'US',
-              zipCode: locationQuery
+              zipCode: trimmedQuery
             };
           }
         }
-      } else {
-        // City name or coordinates
-        geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationQuery)}&limit=1&addressdetails=1`;
-        const nominatimResponse = await fetch(geocodeUrl);
         
-        if (nominatimResponse.ok) {
-          const nominatimData = await nominatimResponse.json();
-          if (nominatimData.length > 0) {
-            const result = nominatimData[0];
+        console.warn('ZIP code not found, using Chicago as fallback');
+        return {
+          lat: 41.8781,
+          lon: -87.6298,
+          city: 'Chicago',
+          region: 'Illinois',
+          country: 'US',
+          zipCode: trimmedQuery
+        };
+      } else {
+        // For city names or coordinates
+        const cityResponse = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(trimmedQuery)}&addressdetails=1&limit=1`
+        );
+        
+        if (cityResponse.ok) {
+          const cityData = await cityResponse.json();
+          if (cityData.length > 0) {
+            const result = cityData[0];
             return {
               lat: parseFloat(result.lat),
               lon: parseFloat(result.lon),
@@ -113,8 +131,8 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
         }
       }
 
-      // Ultimate fallback for invalid location
-      console.warn('Location not found, using default');
+      // Ultimate fallback
+      console.warn('Location not found, using New York as fallback');
       return {
         lat: 40.7128,
         lon: -74.0060,
@@ -190,18 +208,19 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
 
       // Location-based estimation if APIs fail
       console.warn('Air quality APIs unavailable, using location-based estimates');
-      const urbanFactor = lat > 40 ? 1.4 : 1.0; // Higher pollution in northern cities
-      const baseAQI = Math.floor(Math.random() * 40) + 40;
-      const adjustedAQI = Math.round(baseAQI * urbanFactor);
+      
+      // Better estimation based on location
+      const isUrban = lat > 35 && lat < 45 && lon > -125 && lon < -65; // Rough US urban areas
+      const baseAQI = isUrban ? Math.floor(Math.random() * 60) + 40 : Math.floor(Math.random() * 40) + 20;
       
       return {
-        aqi: adjustedAQI,
-        pm25: Math.round(adjustedAQI * 0.4) + Math.floor(Math.random() * 15),
-        pm10: Math.round(adjustedAQI * 0.6) + Math.floor(Math.random() * 20),
-        o3: Math.floor(Math.random() * 60) + 20,
-        no2: Math.floor(Math.random() * 40) + 10,
-        so2: Math.floor(Math.random() * 15) + 2,
-        co: Math.floor(Math.random() * 3) + 1,
+        aqi: baseAQI,
+        pm25: Math.round(baseAQI * 0.4) + Math.floor(Math.random() * 10),
+        pm10: Math.round(baseAQI * 0.6) + Math.floor(Math.random() * 15),
+        o3: Math.floor(Math.random() * 50) + 20,
+        no2: Math.floor(Math.random() * 30) + 10,
+        so2: Math.floor(Math.random() * 10) + 2,
+        co: Math.floor(Math.random() * 2) + 1,
         source: 'Estimated (API Limited)'
       };
     } catch (err) {
@@ -231,15 +250,18 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
         };
       }
 
-      // Fallback weather data
+      // Fallback weather data based on season and location
       console.warn('Weather API unavailable, using seasonal estimates');
       const month = new Date().getMonth();
-      const seasonalTemp = month >= 3 && month <= 8 ? 
-        Math.floor(Math.random() * 15) + 20 : // Spring/Summer
-        Math.floor(Math.random() * 15) + 5;   // Fall/Winter
+      const isWinter = month >= 11 || month <= 2;
+      const isSummer = month >= 5 && month <= 8;
+      
+      let baseTemp = 15; // Spring/Fall default
+      if (isWinter) baseTemp = lat > 35 ? 5 : -5; // Warmer in south
+      if (isSummer) baseTemp = lat > 35 ? 25 : 20; // Cooler in north
       
       return {
-        temperature: seasonalTemp,
+        temperature: baseTemp + Math.floor(Math.random() * 10) - 5,
         humidity: Math.floor(Math.random() * 30) + 40,
         pressure: Math.floor(Math.random() * 40) + 1005,
         windSpeed: Math.round((Math.random() * 15 + 2) * 10) / 10,
@@ -314,7 +336,7 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
     setError(null);
     
     try {
-      console.log('Fetching real-time data for:', { location, buildingType, populationGroup });
+      console.log('Fetching real-time data for location:', location);
       
       const locationData = await fetchLocationData(location);
       console.log('Location resolved:', locationData);
@@ -333,7 +355,7 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
       });
       
       setLastUpdated(new Date());
-      console.log('Data refresh completed successfully');
+      console.log('Data refresh completed successfully for:', locationData.city);
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch external data';
