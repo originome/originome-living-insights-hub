@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,56 +27,92 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
   populationGroup
 }) => {
   const performanceImpacts = useMemo(() => {
-    // Use real literature-based calculations
+    // Use real outdoor air quality data if available, otherwise use indoor params
+    const effectiveOutdoorPM25 = externalData.airQuality?.pm25 || 25;
+    const effectiveOutdoorAQI = externalData.airQuality?.aqi || 50;
+    const effectiveTemperature = externalData.weather?.temperature || environmentalParams.temperature;
+    const effectiveHumidity = externalData.weather?.humidity || environmentalParams.humidity;
+    
+    console.log('Performance calculation inputs:', {
+      location: externalData.location?.city,
+      outdoorAQI: effectiveOutdoorAQI,
+      outdoorPM25: effectiveOutdoorPM25,
+      outdoorTemp: externalData.weather?.temperature,
+      indoorCO2: environmentalParams.co2,
+      buildingType,
+      populationGroup
+    });
+
+    // Calculate indoor PM2.5 based on outdoor conditions and building filtration
+    const buildingFilterEfficiency = {
+      'office': 0.7,      // Modern office buildings with HVAC
+      'school': 0.6,      // School buildings
+      'healthcare': 0.8,  // Hospitals with better filtration
+      'residential': 0.4, // Typical homes
+      'retail': 0.5,      // Commercial spaces
+      'warehouse': 0.3,   // Industrial buildings
+      'hospitality': 0.6, // Hotels/restaurants
+      'laboratory': 0.9   // Labs with specialized filtration
+    };
+
+    const filterEff = buildingFilterEfficiency[buildingType as keyof typeof buildingFilterEfficiency] || 0.5;
+    const effectiveIndoorPM25 = Math.max(
+      environmentalParams.pm25,
+      effectiveOutdoorPM25 * (1 - filterEff)
+    );
+
+    // Literature-based cognitive impact calculations
     const cognitiveImpactCO2 = LiteratureService.calculateCognitiveImpact(environmentalParams.co2);
-    const pm25Impact = LiteratureService.calculatePM25Impact(environmentalParams.pm25);
-    const temperatureImpact = LiteratureService.calculateTemperatureImpact(environmentalParams.temperature, buildingType);
+    const pm25Impact = LiteratureService.calculatePM25Impact(effectiveIndoorPM25);
+    const temperatureImpact = LiteratureService.calculateTemperatureImpact(effectiveTemperature, buildingType);
     const lightingImpact = LiteratureService.calculateLightingImpact(environmentalParams.light, buildingType);
 
-    // Combine cognitive impacts (literature-based)
-    const totalCognitiveImpact = cognitiveImpactCO2 + pm25Impact.cognitive;
+    // Total cognitive impact
+    const totalCognitiveImpact = Math.abs(cognitiveImpactCO2) + Math.abs(pm25Impact.cognitive) + Math.abs(temperatureImpact) + Math.abs(lightingImpact);
     
-    // Productivity impact (Seppänen & Fisk study + lighting effects)
-    const productivityImpact = temperatureImpact + lightingImpact;
+    // Productivity impact based on multiple factors
+    const productivityImpact = totalCognitiveImpact * 0.8; // Cognitive performance correlates with productivity
 
-    // Health risk calculation based on PM2.5 and external conditions
-    const outdoorPM25 = externalData.airQuality?.pm25 || 0;
-    const effectivePM25 = Math.max(environmentalParams.pm25, outdoorPM25 * 0.6);
+    // Health risk calculation with location-specific factors
+    const baseHealthRisk = pm25Impact.health;
+    const viralActivity = externalData.healthSurveillance?.viralActivity || 'Low';
+    const viralMultiplier = { 'Low': 1, 'Medium': 1.3, 'High': 1.6 }[viralActivity];
     
     let healthRisk = 'Low';
-    if (effectivePM25 > 35 || environmentalParams.co2 > 1000) {
+    const healthScore = baseHealthRisk * viralMultiplier;
+    
+    if (healthScore > 8 || effectiveIndoorPM25 > 35 || environmentalParams.co2 > 1200) {
       healthRisk = 'High';
-    } else if (effectivePM25 > 15 || environmentalParams.co2 > 800) {
+    } else if (healthScore > 4 || effectiveIndoorPM25 > 15 || environmentalParams.co2 > 800) {
       healthRisk = 'Moderate';
     }
 
-    // Absenteeism calculation (Zhang et al. study + viral activity)
-    const baseAbsenteeism = pm25Impact.health * 0.3; // Convert mortality risk to absenteeism
-    const viralMultiplier = {
-      'Low': 1,
-      'Medium': 1.5,
-      'High': 2.2
-    }[externalData.healthSurveillance?.viralActivity || 'Low'];
-    
-    const absenteeismRisk = baseAbsenteeism * viralMultiplier;
+    // Absenteeism calculation with seasonal and location adjustments
+    const seasonalFactor = new Date().getMonth() >= 10 || new Date().getMonth() <= 2 ? 1.4 : 1.0; // Winter months
+    const locationFactor = externalData.location?.region === 'California' ? 0.8 : 1.0; // Better climate
+    const baseAbsenteeism = healthScore * 0.4 * seasonalFactor * locationFactor;
 
-    // Population-specific adjustments based on literature
+    // Population-specific adjustments
     const populationMultipliers = {
-      elderly: { cognitive: 1.3, health: 1.4, absenteeism: 1.2 },
-      children: { cognitive: 1.1, health: 1.2, absenteeism: 1.4 },
-      vulnerable: { cognitive: 1.4, health: 1.6, absenteeism: 1.5 },
-      students: { cognitive: 1.0, health: 0.9, absenteeism: 1.1 },
-      adults: { cognitive: 1.0, health: 1.0, absenteeism: 1.0 }
+      elderly: { cognitive: 1.4, productivity: 1.2, health: 1.5, absenteeism: 1.3 },
+      children: { cognitive: 1.2, productivity: 1.1, health: 1.3, absenteeism: 1.5 },
+      vulnerable: { cognitive: 1.5, productivity: 1.3, health: 1.6, absenteeism: 1.4 },
+      students: { cognitive: 1.0, productivity: 1.0, health: 0.9, absenteeism: 1.2 },
+      adults: { cognitive: 1.0, productivity: 1.0, health: 1.0, absenteeism: 1.0 },
+      mixed: { cognitive: 1.1, productivity: 1.05, health: 1.1, absenteeism: 1.1 }
     };
 
     const multiplier = populationMultipliers[populationGroup as keyof typeof populationMultipliers] || populationMultipliers.adults;
 
-    return {
-      cognitive: Math.round(Math.abs(totalCognitiveImpact) * multiplier.cognitive),
-      productivity: Math.round(Math.abs(productivityImpact) * multiplier.cognitive),
+    const finalImpacts = {
+      cognitive: Math.min(50, Math.round(totalCognitiveImpact * multiplier.cognitive)),
+      productivity: Math.min(40, Math.round(productivityImpact * multiplier.productivity)),
       health: healthRisk,
-      absenteeism: Math.round(Math.abs(absenteeismRisk) * multiplier.absenteeism)
+      absenteeism: Math.min(30, Math.round(baseAbsenteeism * multiplier.absenteeism))
     };
+
+    console.log('Performance impacts calculated:', finalImpacts);
+    return finalImpacts;
   }, [environmentalParams, externalData, buildingType, populationGroup]);
 
   const getRiskColor = (value: number | string, type: 'percentage' | 'risk') => {
@@ -95,7 +132,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
   };
 
   const getIcon = (value: number) => {
-    return value > 10 ? TrendingDown : value > 5 ? AlertTriangle : TrendingUp;
+    return value > 15 ? TrendingDown : value > 5 ? AlertTriangle : TrendingUp;
   };
 
   return (
@@ -105,13 +142,18 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
           <Users className="h-5 w-5 text-indigo-600" />
           Performance Impact
         </CardTitle>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Badge variant="outline" className="text-xs">
             {buildingType}
           </Badge>
           <Badge variant="outline" className="text-xs">
             {populationGroup}
           </Badge>
+          {externalData.location && (
+            <Badge variant="outline" className="text-xs">
+              {externalData.location.city}
+            </Badge>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -160,18 +202,20 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
         {externalData.airQuality && (
           <div className="pt-3 border-t text-xs text-gray-600">
             <div className="flex justify-between mb-1">
+              <span>Outdoor AQI:</span>
+              <span className="font-medium">{externalData.airQuality.aqi}</span>
+            </div>
+            <div className="flex justify-between mb-1">
               <span>Outdoor PM2.5:</span>
               <span className="font-medium">{externalData.airQuality.pm25} μg/m³</span>
             </div>
             <div className="flex justify-between mb-1">
-              <span>Indoor estimate:</span>
-              <span className="font-medium">
-                {Math.round(Math.max(environmentalParams.pm25, externalData.airQuality.pm25 * 0.6))} μg/m³
-              </span>
+              <span>Viral Activity:</span>
+              <span className="font-medium">{externalData.healthSurveillance?.viralActivity || 'Low'}</span>
             </div>
             <div className="flex justify-between">
-              <span>Data source:</span>
-              <span className="font-medium">{externalData.airQuality.source}</span>
+              <span>Location:</span>
+              <span className="font-medium">{externalData.location?.city || 'Unknown'}</span>
             </div>
           </div>
         )}

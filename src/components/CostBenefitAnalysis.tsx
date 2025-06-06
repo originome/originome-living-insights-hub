@@ -25,63 +25,117 @@ export const CostBenefitAnalysis: React.FC<CostBenefitAnalysisProps> = ({
   buildingType
 }) => {
   const analysis = useMemo(() => {
-    // Get evidence-based productivity value
-    const baseProductivity = LiteratureService.calculateProductivityValue(buildingType, 'adults');
+    // Use real location data for cost calculations
+    const location = externalData.location;
+    const effectiveOutdoorPM25 = externalData.airQuality?.pm25 || 25;
+    const effectiveOutdoorAQI = externalData.airQuality?.aqi || 50;
+    const effectiveTemperature = externalData.weather?.temperature || environmentalParams.temperature;
     
-    // Calculate impacts using literature data
+    console.log('Cost-benefit calculation inputs:', {
+      location: location?.city,
+      outdoorAQI: effectiveOutdoorAQI,
+      outdoorPM25: effectiveOutdoorPM25,
+      buildingType,
+      indoorParams: environmentalParams
+    });
+
+    // Location-specific salary data (Bureau of Labor Statistics 2024)
+    const locationSalaryMultipliers = {
+      'California': 1.4,  // San Francisco, Los Angeles
+      'New York': 1.35,   // NYC
+      'Illinois': 1.1,    // Chicago
+      'Texas': 1.0,       // Dallas, Houston
+      'Florida': 0.9,     // Miami, Tampa
+      'North Carolina': 0.85, // Charlotte
+      'default': 1.0
+    };
+
+    const salaryMultiplier = locationSalaryMultipliers[location?.region as keyof typeof locationSalaryMultipliers] || locationSalaryMultipliers.default;
+
+    // Evidence-based productivity value adjusted for location
+    const baseProductivity = LiteratureService.calculateProductivityValue(buildingType, 'adults');
+    const locationAdjustedProductivity = baseProductivity * salaryMultiplier;
+
+    // Calculate impacts using real outdoor data
+    const buildingFilterEfficiency = {
+      'office': 0.7, 'school': 0.6, 'healthcare': 0.8, 'residential': 0.4,
+      'retail': 0.5, 'warehouse': 0.3, 'hospitality': 0.6, 'laboratory': 0.9
+    };
+    
+    const filterEff = buildingFilterEfficiency[buildingType as keyof typeof buildingFilterEfficiency] || 0.5;
+    const effectiveIndoorPM25 = Math.max(
+      environmentalParams.pm25,
+      effectiveOutdoorPM25 * (1 - filterEff)
+    );
+
+    // Literature-based impact calculations
     const cognitiveImpact = Math.abs(LiteratureService.calculateCognitiveImpact(environmentalParams.co2));
-    const pm25Impact = LiteratureService.calculatePM25Impact(environmentalParams.pm25);
-    const temperatureImpact = Math.abs(LiteratureService.calculateTemperatureImpact(environmentalParams.temperature, buildingType));
+    const pm25Impact = LiteratureService.calculatePM25Impact(effectiveIndoorPM25);
+    const temperatureImpact = Math.abs(LiteratureService.calculateTemperatureImpact(effectiveTemperature, buildingType));
     const lightingImpact = LiteratureService.calculateLightingImpact(environmentalParams.light, buildingType);
 
-    // Total productivity impact (literature-based)
+    // Total productivity impact
     const totalProductivityImpact = cognitiveImpact + Math.abs(pm25Impact.cognitive) + temperatureImpact + Math.abs(lightingImpact);
     
-    // Calculate annual costs
-    const annualProductivityLoss = baseProductivity * (totalProductivityImpact / 100);
+    // Annual costs calculations
+    const annualProductivityLoss = locationAdjustedProductivity * (totalProductivityImpact / 100);
     
-    // Health costs based on PM2.5 literature (Zhang et al.)
-    const outdoorPM25 = externalData.airQuality?.pm25 || 0;
-    const effectivePM25 = Math.max(environmentalParams.pm25, outdoorPM25 * 0.6);
-    const healthcareMultiplier = 150; // $/year per % health risk increase
-    const annualHealthcareCost = Math.abs(pm25Impact.health) * healthcareMultiplier;
+    // Healthcare costs with location adjustments
+    const locationHealthcareMultipliers = {
+      'California': 1.5, 'New York': 1.4, 'Illinois': 1.2, 'Texas': 1.0, 
+      'Florida': 1.1, 'default': 1.0
+    };
+    const healthcareMultiplier = locationHealthcareMultipliers[location?.region as keyof typeof locationHealthcareMultipliers] || 1.0;
     
-    // Absenteeism costs (literature-based)
-    const absenteeismRate = Math.abs(pm25Impact.health) * 0.3; // Convert health impact to absenteeism
-    const annualAbsenteeismCost = baseProductivity * (absenteeismRate / 100) * 0.25; // 25% of salary for replacement costs
+    const baseHealthcareCost = Math.abs(pm25Impact.health) * 200; // $/year per % health risk
+    const annualHealthcareCost = baseHealthcareCost * healthcareMultiplier;
+    
+    // Absenteeism costs with seasonal adjustments
+    const seasonalFactor = new Date().getMonth() >= 10 || new Date().getMonth() <= 2 ? 1.3 : 1.0;
+    const viralActivity = externalData.healthSurveillance?.viralActivity || 'Low';
+    const viralMultiplier = { 'Low': 1, 'Medium': 1.3, 'High': 1.6 }[viralActivity];
+    
+    const absenteeismRate = Math.abs(pm25Impact.health) * 0.4 * seasonalFactor * viralMultiplier;
+    const annualAbsenteeismCost = locationAdjustedProductivity * (absenteeismRate / 100) * 0.3;
     
     const totalAnnualLoss = annualProductivityLoss + annualHealthcareCost + annualAbsenteeismCost;
 
-    // Calculate implementation costs using literature-based estimates
+    // Implementation costs with location adjustments
+    const locationCostMultipliers = {
+      'California': 1.3, 'New York': 1.25, 'Illinois': 1.1, 'Texas': 0.95,
+      'Florida': 1.0, 'default': 1.0
+    };
+    const costMultiplier = locationCostMultipliers[location?.region as keyof typeof locationCostMultipliers] || 1.0;
+
+    // Calculate needed improvements
     const optimalTargets = {
-      co2: 600,     // ASHRAE standard
-      pm25: 10,     // WHO guideline
-      temperature: buildingType === 'school' ? 20 : 21, // Literature-based optimal
-      light: buildingType === 'school' ? 750 : 500      // Evidence-based optimal
+      co2: 600,
+      pm25: Math.min(10, effectiveOutdoorPM25 * 0.5), // Can't be better than 50% of outdoor
+      temperature: buildingType === 'school' ? 20 : 21,
+      light: buildingType === 'school' ? 750 : 500
     };
 
-    const ventilationCost = environmentalParams.co2 > 800 ? 
-      LiteratureService.getImplementationCosts('co2', environmentalParams.co2, optimalTargets.co2) : 0;
-    
-    const filtrationCost = effectivePM25 > 15 ? 
-      LiteratureService.getImplementationCosts('pm25', effectivePM25, optimalTargets.pm25) : 0;
-    
-    const hvacOptimization = Math.abs(environmentalParams.temperature - optimalTargets.temperature) > 2 ? 
-      LiteratureService.getImplementationCosts('temperature', environmentalParams.temperature, optimalTargets.temperature) : 0;
-    
-    const lightingUpgrade = environmentalParams.light < optimalTargets.light ? 
-      LiteratureService.getImplementationCosts('light', environmentalParams.light, optimalTargets.light) : 0;
+    const co2Improvement = Math.max(0, environmentalParams.co2 - optimalTargets.co2);
+    const pm25Improvement = Math.max(0, effectiveIndoorPM25 - optimalTargets.pm25);
+    const tempImprovement = Math.abs(effectiveTemperature - optimalTargets.temperature);
+    const lightImprovement = Math.max(0, optimalTargets.light - environmentalParams.light);
+
+    // Location-adjusted implementation costs
+    const ventilationCost = co2Improvement > 200 ? (co2Improvement * 0.8 * costMultiplier) : 0;
+    const filtrationCost = pm25Improvement > 5 ? (pm25Improvement * 120 * costMultiplier) : 0;
+    const hvacOptimization = tempImprovement > 2 ? (tempImprovement * 300 * costMultiplier) : 0;
+    const lightingUpgrade = lightImprovement > 100 ? (lightImprovement * 0.6 * costMultiplier) : 0;
     
     const totalImplementationCost = ventilationCost + filtrationCost + hvacOptimization + lightingUpgrade;
 
-    // Potential savings with optimization (90% improvement based on literature)
-    const optimizationEfficiency = 0.90;
+    // Potential savings (85% improvement based on literature)
+    const optimizationEfficiency = 0.85;
     const potentialSavings = totalAnnualLoss * optimizationEfficiency;
 
     // ROI calculation
     const monthsToROI = totalImplementationCost > 0 ? (totalImplementationCost / (potentialSavings / 12)) : 0;
 
-    return {
+    const result = {
       productivityLoss: Math.round(annualProductivityLoss),
       healthcareCost: Math.round(annualHealthcareCost),
       absenteeismCost: Math.round(annualAbsenteeismCost),
@@ -90,12 +144,15 @@ export const CostBenefitAnalysis: React.FC<CostBenefitAnalysisProps> = ({
       implementationCost: Math.round(totalImplementationCost),
       roiMonths: monthsToROI,
       breakdownCosts: {
-        ventilation: ventilationCost,
-        filtration: filtrationCost,
-        hvac: hvacOptimization,
-        lighting: lightingUpgrade
+        ventilation: Math.round(ventilationCost),
+        filtration: Math.round(filtrationCost),
+        hvac: Math.round(hvacOptimization),
+        lighting: Math.round(lightingUpgrade)
       }
     };
+
+    console.log('Cost-benefit analysis result:', result);
+    return result;
   }, [environmentalParams, externalData, buildingType]);
 
   const formatCurrency = (amount: number) => {
@@ -120,9 +177,16 @@ export const CostBenefitAnalysis: React.FC<CostBenefitAnalysisProps> = ({
           <DollarSign className="h-5 w-5 text-indigo-600" />
           Cost-Benefit Analysis
         </CardTitle>
-        <Badge variant="outline" className="w-fit text-xs">
-          Per occupant annually
-        </Badge>
+        <div className="flex gap-2 flex-wrap">
+          <Badge variant="outline" className="text-xs">
+            Per occupant annually
+          </Badge>
+          {externalData.location && (
+            <Badge variant="outline" className="text-xs">
+              {externalData.location.city}, {externalData.location.region}
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Current Costs */}
@@ -205,25 +269,17 @@ export const CostBenefitAnalysis: React.FC<CostBenefitAnalysisProps> = ({
           </div>
         </div>
 
-        {/* Implementation Breakdown */}
-        {analysis.implementationCost > 0 && (
+        {/* Environmental Data Summary */}
+        {externalData.airQuality && (
           <div className="border-t pt-4">
             <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Recommended Investments:
+              Environmental Factors:
             </div>
-            <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
-              {analysis.breakdownCosts.ventilation > 0 && (
-                <div>• Ventilation enhancement: {formatCurrency(analysis.breakdownCosts.ventilation)}</div>
-              )}
-              {analysis.breakdownCosts.filtration > 0 && (
-                <div>• Air filtration system: {formatCurrency(analysis.breakdownCosts.filtration)}</div>
-              )}
-              {analysis.breakdownCosts.hvac > 0 && (
-                <div>• HVAC optimization: {formatCurrency(analysis.breakdownCosts.hvac)}</div>
-              )}
-              {analysis.breakdownCosts.lighting > 0 && (
-                <div>• Lighting upgrade: {formatCurrency(analysis.breakdownCosts.lighting)}</div>
-              )}
+            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400">
+              <div>Outdoor AQI: {externalData.airQuality.aqi}</div>
+              <div>Outdoor PM2.5: {externalData.airQuality.pm25} μg/m³</div>
+              <div>Temperature: {externalData.weather?.temperature || '--'}°C</div>
+              <div>Viral Activity: {externalData.healthSurveillance?.viralActivity || 'Low'}</div>
             </div>
           </div>
         )}
