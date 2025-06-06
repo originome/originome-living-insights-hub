@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 
 export interface ExternalData {
@@ -72,7 +71,7 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
             return {
               lat: parseFloat(result.lat),
               lon: parseFloat(result.lon),
-              city: result.address?.city || result.address?.town || result.address?.village || 'Unknown City',
+              city: result.address?.city || result.address?.town || result.address?.village || result.address?.suburb || 'Unknown City',
               region: result.address?.state || result.address?.county || '',
               country: 'US',
               zipCode: trimmedQuery
@@ -92,7 +91,7 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
             return {
               lat: parseFloat(result.lat),
               lon: parseFloat(result.lon),
-              city: result.address?.city || result.address?.town || result.address?.village || 'Unknown City',
+              city: result.address?.city || result.address?.town || result.address?.village || result.address?.suburb || 'Unknown City',
               region: result.address?.state || result.address?.county || '',
               country: 'US',
               zipCode: trimmedQuery
@@ -152,37 +151,19 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
     }
   };
 
-  const fetchAirQuality = async (lat: number, lon: number) => {
+  const fetchAirQuality = async (lat: number, lon: number, locationInfo: any) => {
     try {
-      // Try WAQI first (World Air Quality Index)
-      const waqiResponse = await fetch(
-        `https://api.waqi.info/feed/geo:${lat};${lon}/?token=demo`
-      );
+      console.log(`Fetching air quality for coordinates: ${lat}, ${lon} (${locationInfo.city}, ${locationInfo.region})`);
       
-      if (waqiResponse.ok) {
-        const waqiData = await waqiResponse.json();
-        if (waqiData.status === 'ok' && waqiData.data) {
-          const data = waqiData.data;
-          return {
-            aqi: data.aqi || 0,
-            pm25: data.iaqi?.pm25?.v || 0,
-            pm10: data.iaqi?.pm10?.v || 0,
-            o3: data.iaqi?.o3?.v || 0,
-            no2: data.iaqi?.no2?.v || 0,
-            so2: data.iaqi?.so2?.v || 0,
-            co: data.iaqi?.co?.v || 0,
-            source: 'World Air Quality Index (Real-time)'
-          };
-        }
-      }
-
-      // Fallback to OpenAQ
+      // Try OpenAQ first for more reliable location-based data
       const openaqResponse = await fetch(
-        `https://api.openaq.org/v2/latest?limit=1&coordinates=${lat},${lon}&radius=25000&order_by=lastUpdated&sort=desc`
+        `https://api.openaq.org/v2/latest?limit=1&coordinates=${lat},${lon}&radius=50000&order_by=lastUpdated&sort=desc`
       );
       
       if (openaqResponse.ok) {
         const openaqData = await openaqResponse.json();
+        console.log('OpenAQ response:', openaqData);
+        
         if (openaqData.results && openaqData.results.length > 0) {
           const result = openaqData.results[0];
           const measurements = result.measurements;
@@ -193,40 +174,142 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
           };
 
           const pm25 = getParameterValue('pm25');
+          const pm10 = getParameterValue('pm10');
+          const o3 = getParameterValue('o3');
+          const no2 = getParameterValue('no2');
+          const so2 = getParameterValue('so2');
+          const co = getParameterValue('co');
+          
+          // Calculate AQI from PM2.5 using EPA formula
+          const calculateAQI = (pm25: number) => {
+            if (pm25 <= 12) return Math.round((50 / 12) * pm25);
+            if (pm25 <= 35.4) return Math.round(50 + ((100 - 50) / (35.4 - 12.1)) * (pm25 - 12.1));
+            if (pm25 <= 55.4) return Math.round(101 + ((150 - 101) / (55.4 - 35.5)) * (pm25 - 35.5));
+            if (pm25 <= 150.4) return Math.round(151 + ((200 - 151) / (150.4 - 55.5)) * (pm25 - 55.5));
+            if (pm25 <= 250.4) return Math.round(201 + ((300 - 201) / (250.4 - 150.5)) * (pm25 - 150.5));
+            return Math.round(301 + ((500 - 301) / (500.4 - 250.5)) * (pm25 - 250.5));
+          };
+
+          const aqi = calculateAQI(pm25);
+          
+          console.log(`OpenAQ data for ${locationInfo.city}: AQI=${aqi}, PM2.5=${pm25}`);
+          
           return {
-            aqi: Math.round(pm25 * 2), // Rough AQI calculation
+            aqi,
             pm25,
-            pm10: getParameterValue('pm10'),
-            o3: getParameterValue('o3'),
-            no2: getParameterValue('no2'),
-            so2: getParameterValue('so2'),
-            co: getParameterValue('co'),
-            source: 'OpenAQ Network (Real-time)'
+            pm10,
+            o3,
+            no2,
+            so2,
+            co,
+            source: `OpenAQ Network - ${result.city || locationInfo.city}`
           };
         }
       }
 
-      // Location-based estimation if APIs fail
-      console.warn('Air quality APIs unavailable, using location-based estimates');
+      // Fallback to WAQI (but we know it may not be location-accurate)
+      const waqiResponse = await fetch(
+        `https://api.waqi.info/feed/geo:${lat};${lon}/?token=demo`
+      );
       
-      // Better estimation based on location
-      const isUrban = lat > 35 && lat < 45 && lon > -125 && lon < -65; // Rough US urban areas
-      const baseAQI = isUrban ? Math.floor(Math.random() * 60) + 40 : Math.floor(Math.random() * 40) + 20;
+      if (waqiResponse.ok) {
+        const waqiData = await waqiResponse.json();
+        console.log('WAQI response:', waqiData);
+        
+        if (waqiData.status === 'ok' && waqiData.data) {
+          const data = waqiData.data;
+          
+          // Check if the returned city matches our expected location
+          const returnedCity = data.city?.name || '';
+          const isLocationMatch = returnedCity.toLowerCase().includes(locationInfo.city.toLowerCase()) ||
+                                locationInfo.city.toLowerCase().includes(returnedCity.toLowerCase());
+          
+          if (!isLocationMatch) {
+            console.warn(`WAQI returned data for ${returnedCity}, but we requested ${locationInfo.city}. Using estimated data instead.`);
+            
+            // Use location-based estimation if WAQI data doesn't match
+            return getLocationBasedEstimate(lat, lon, locationInfo);
+          }
+          
+          return {
+            aqi: data.aqi || 0,
+            pm25: data.iaqi?.pm25?.v || 0,
+            pm10: data.iaqi?.pm10?.v || 0,
+            o3: data.iaqi?.o3?.v || 0,
+            no2: data.iaqi?.no2?.v || 0,
+            so2: data.iaqi?.so2?.v || 0,
+            co: data.iaqi?.co?.v || 0,
+            source: `WAQI - ${data.city?.name || locationInfo.city}`
+          };
+        }
+      }
+
+      // Use location-based estimation if APIs fail
+      return getLocationBasedEstimate(lat, lon, locationInfo);
       
-      return {
-        aqi: baseAQI,
-        pm25: Math.round(baseAQI * 0.4) + Math.floor(Math.random() * 10),
-        pm10: Math.round(baseAQI * 0.6) + Math.floor(Math.random() * 15),
-        o3: Math.floor(Math.random() * 50) + 20,
-        no2: Math.floor(Math.random() * 30) + 10,
-        so2: Math.floor(Math.random() * 10) + 2,
-        co: Math.floor(Math.random() * 2) + 1,
-        source: 'Estimated (API Limited)'
-      };
     } catch (err) {
       console.error('Air quality fetch error:', err);
-      return null;
+      return getLocationBasedEstimate(lat, lon, locationInfo);
     }
+  };
+
+  const getLocationBasedEstimate = (lat: number, lon: number, locationInfo: any) => {
+    console.log(`Generating location-based air quality estimate for ${locationInfo.city}, ${locationInfo.region}`);
+    
+    // More sophisticated estimation based on location characteristics
+    let baseAQI = 35; // Default moderate air quality
+    
+    // Regional adjustments based on known air quality patterns
+    if (locationInfo.region === 'California' || locationInfo.region === 'CA') {
+      if (locationInfo.city.toLowerCase().includes('los angeles') || 
+          locationInfo.city.toLowerCase().includes('san bernardino') ||
+          locationInfo.city.toLowerCase().includes('riverside')) {
+        baseAQI += 25; // Higher pollution in LA basin
+      } else if (locationInfo.city.toLowerCase().includes('san francisco') ||
+                 locationInfo.city.toLowerCase().includes('san jose')) {
+        baseAQI += 10; // Moderate urban pollution
+      }
+    } else if (locationInfo.region === 'Illinois' || locationInfo.region === 'IL') {
+      if (locationInfo.city.toLowerCase().includes('chicago')) {
+        baseAQI += 15; // Urban pollution
+      }
+    } else if (locationInfo.region === 'New York' || locationInfo.region === 'NY') {
+      if (locationInfo.city.toLowerCase().includes('new york')) {
+        baseAQI += 20; // NYC urban pollution
+      }
+    } else if (locationInfo.region === 'Florida' || locationInfo.region === 'FL') {
+      baseAQI -= 5; // Generally better air quality
+    } else if (locationInfo.region === 'Texas' || locationInfo.region === 'TX') {
+      if (locationInfo.city.toLowerCase().includes('houston') ||
+          locationInfo.city.toLowerCase().includes('dallas')) {
+        baseAQI += 15; // Industrial pollution
+      }
+    }
+    
+    // Seasonal adjustments (basic - could be enhanced with actual date)
+    const month = new Date().getMonth();
+    const isSummer = month >= 5 && month <= 8;
+    const isWinter = month >= 11 || month <= 2;
+    
+    if (isSummer) baseAQI += 10; // Higher ozone in summer
+    if (isWinter && lat > 35) baseAQI += 5; // Heating season pollution
+    
+    // Add some realistic variation
+    const variation = Math.floor(Math.random() * 20) - 10;
+    const finalAQI = Math.max(10, Math.min(150, baseAQI + variation));
+    
+    const pm25 = Math.round(finalAQI * 0.4 + Math.random() * 5);
+    
+    return {
+      aqi: finalAQI,
+      pm25,
+      pm10: Math.round(pm25 * 1.5 + Math.random() * 10),
+      o3: Math.round(Math.random() * 50) + 20,
+      no2: Math.round(Math.random() * 30) + 10,
+      so2: Math.round(Math.random() * 10) + 2,
+      co: Math.round(Math.random() * 2) + 1,
+      source: `Estimated for ${locationInfo.city}, ${locationInfo.region}`
+    };
   };
 
   const fetchWeatherData = async (lat: number, lon: number) => {
@@ -342,10 +425,12 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
       console.log('Location resolved:', locationData);
       
       const [airQuality, weather, healthSurveillance] = await Promise.all([
-        fetchAirQuality(locationData.lat, locationData.lon),
+        fetchAirQuality(locationData.lat, locationData.lon, locationData),
         fetchWeatherData(locationData.lat, locationData.lon),
         fetchHealthSurveillance(locationData.region, locationData.country, buildingType, populationGroup)
       ]);
+      
+      console.log('Air quality data:', airQuality);
       
       setExternalData({
         airQuality,
