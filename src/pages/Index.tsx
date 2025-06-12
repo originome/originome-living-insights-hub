@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { LocationInput } from '@/components/LocationInput';
 import { CurrentConditions } from '@/components/CurrentConditions';
@@ -14,6 +13,8 @@ import { DashboardHeader } from '@/components/DashboardHeader';
 import { useApiIntegration } from '@/hooks/useApiIntegration';
 import { useToast } from '@/hooks/use-toast';
 import { LiteratureService } from '@/services/literatureService';
+import { CosmicConditions } from '@/components/CosmicConditions';
+import { useCosmicData } from '@/hooks/useCosmicData';
 
 const Index = () => {
   const { toast } = useToast();
@@ -36,6 +37,18 @@ const Index = () => {
     error,
     refreshData
   } = useApiIntegration(location, buildingType, populationGroup);
+
+  // Add cosmic data integration
+  const {
+    cosmicData,
+    isLoading: isCosmicLoading,
+    error: cosmicError,
+    lastUpdated: cosmicLastUpdated,
+    refreshData: refreshCosmicData
+  } = useCosmicData(
+    externalData.location?.coordinates?.latitude,
+    externalData.location?.coordinates?.longitude
+  );
 
   const handleLocationChange = (newLocation: string) => {
     setLocation(newLocation);
@@ -83,6 +96,16 @@ const Index = () => {
       });
     }
   }, [error, toast]);
+
+  useEffect(() => {
+    if (cosmicError) {
+      toast({
+        title: "Cosmic Data Error",
+        description: cosmicError,
+        variant: "destructive",
+      });
+    }
+  }, [cosmicError, toast]);
 
   // Get relevant literature citations for current parameters
   const getRelevantCitations = () => {
@@ -167,6 +190,27 @@ const Index = () => {
           onParamChange={handleParamChange}
           externalData={externalData}
         />
+
+        {/* Cosmic & Environmental Forces Section */}
+        {cosmicData && (
+          <div>
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Multiscale Environmental Intelligence
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Beyond traditional air quality: cosmic and environmental forces affecting organizational performance
+              </p>
+            </div>
+            <CosmicConditions
+              geomagneticData={cosmicData.geomagnetic}
+              solarData={cosmicData.solar}
+              seasonalData={cosmicData.seasonal}
+              seismicData={cosmicData.seismic}
+              isLoading={isCosmicLoading}
+            />
+          </div>
+        )}
 
         {/* Analysis and Insights Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
