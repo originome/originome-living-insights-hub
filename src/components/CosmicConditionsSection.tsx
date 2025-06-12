@@ -21,7 +21,7 @@ export const CosmicConditionsSection: React.FC<CosmicConditionsSectionProps> = (
           Multiscale Environmental Intelligence
         </h2>
         <p className="text-gray-600 text-sm">
-          Beyond traditional air quality: cosmic and environmental forces affecting organizational performance
+          Cosmic and environmental forces affecting organizational performance - data sources beyond traditional wellness metrics
         </p>
       </div>
       <CosmicConditions

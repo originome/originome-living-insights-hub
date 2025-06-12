@@ -3,7 +3,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Zap, Sun, Moon, Leaf, Activity, AlertTriangle, TrendingUp, Waves } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Zap, Sun, Moon, Leaf, Activity, AlertTriangle, TrendingUp, Waves, ExternalLink, BookOpen } from 'lucide-react';
 import { GeomagneticData, SolarData, SeasonalData, SeismicData } from '@/services/cosmicDataService';
 
 interface CosmicConditionsProps {
@@ -43,7 +44,7 @@ export const CosmicConditions: React.FC<CosmicConditionsProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-purple-600" />
-            Cosmic & Environmental Forces
+            Multiscale Environmental Forces
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -100,8 +101,12 @@ export const CosmicConditions: React.FC<CosmicConditionsProps> = ({
             <div className="text-xs text-blue-700">{geomagneticData.impact}</div>
           </div>
 
-          <div className="text-xs text-gray-500">
-            <strong>Research:</strong> Geomagnetic storms linked to 8-12% increase in absenteeism and equipment failures (Babayev & Allahverdiyeva, 2007)
+          <div className="bg-gray-50 p-3 rounded-lg border-l-4 border-gray-300">
+            <div className="flex items-center gap-2 mb-1">
+              <BookOpen className="h-3 w-3 text-gray-600" />
+              <span className="text-xs font-medium text-gray-700">Scientific Evidence:</span>
+            </div>
+            <div className="text-xs text-gray-600">{geomagneticData.citation}</div>
           </div>
         </CardContent>
       </Card>
@@ -148,8 +153,12 @@ export const CosmicConditions: React.FC<CosmicConditionsProps> = ({
             <div className="text-xs text-orange-700">{solarData.impact}</div>
           </div>
 
-          <div className="text-xs text-gray-500">
-            <strong>Research:</strong> Solar activity correlates with disrupted melatonin production and cardiovascular stress (Cornelissen et al., 2002)
+          <div className="bg-gray-50 p-3 rounded-lg border-l-4 border-gray-300">
+            <div className="flex items-center gap-2 mb-1">
+              <BookOpen className="h-3 w-3 text-gray-600" />
+              <span className="text-xs font-medium text-gray-700">Scientific Evidence:</span>
+            </div>
+            <div className="text-xs text-gray-600">{solarData.citation}</div>
           </div>
         </CardContent>
       </Card>
@@ -159,10 +168,10 @@ export const CosmicConditions: React.FC<CosmicConditionsProps> = ({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Leaf className="h-5 w-5 text-green-600" />
-            Seasonal Proxies
+            Seasonal & Allergen Proxies
           </CardTitle>
           <div className="text-xs text-gray-500">
-            Natural cycles affecting human biological rhythms
+            Natural cycles and allergens affecting human biological rhythms
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -184,14 +193,14 @@ export const CosmicConditions: React.FC<CosmicConditionsProps> = ({
           </div>
 
           <div className="space-y-3">
-            <div className="bg-yellow-50 p-3 rounded-lg">
+            <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Pollen Count</span>
+                <span className="text-sm font-medium">Pollen/Allergen Index</span>
                 <Badge className={getPollenColor(seasonalData.pollenCount.level)}>
                   {seasonalData.pollenCount.level}
                 </Badge>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-xs">
+              <div className="grid grid-cols-3 gap-2 text-xs mb-2">
                 <div className="text-center">
                   <div className="font-bold">{seasonalData.pollenCount.tree}</div>
                   <div className="text-gray-600">Tree</div>
@@ -205,10 +214,13 @@ export const CosmicConditions: React.FC<CosmicConditionsProps> = ({
                   <div className="text-gray-600">Weed</div>
                 </div>
               </div>
+              <div className="text-xs text-yellow-800 bg-yellow-100 p-2 rounded">
+                <strong>Impact:</strong> {seasonalData.pollenCount.impact}
+              </div>
             </div>
 
             {seasonalData.meteorologicalAnomalies.length > 0 && (
-              <div className="bg-red-50 p-3 rounded-lg">
+              <div className="bg-red-50 p-3 rounded-lg border border-red-200">
                 <div className="flex items-center gap-2 mb-1">
                   <AlertTriangle className="h-4 w-4 text-red-600" />
                   <span className="text-sm font-medium text-red-800">Weather Anomalies</span>
@@ -220,8 +232,12 @@ export const CosmicConditions: React.FC<CosmicConditionsProps> = ({
             )}
           </div>
 
-          <div className="text-xs text-gray-500">
-            <strong>Research:</strong> Seasonal light exposure affects productivity by 6-9% via circadian rhythm regulation (Lewy et al., 2006)
+          <div className="bg-gray-50 p-3 rounded-lg border-l-4 border-gray-300">
+            <div className="flex items-center gap-2 mb-1">
+              <BookOpen className="h-3 w-3 text-gray-600" />
+              <span className="text-xs font-medium text-gray-700">Scientific Evidence:</span>
+            </div>
+            <div className="text-xs text-gray-600">{seasonalData.pollenCount.citation}</div>
           </div>
         </CardContent>
       </Card>
@@ -268,8 +284,12 @@ export const CosmicConditions: React.FC<CosmicConditionsProps> = ({
             <div className="text-xs text-indigo-700">{seismicData.impact}</div>
           </div>
 
-          <div className="text-xs text-gray-500">
-            <strong>Research:</strong> Microseismic activity correlates with increased anxiety and sleep disturbances in sensitive populations (Persinger, 2014)
+          <div className="bg-gray-50 p-3 rounded-lg border-l-4 border-gray-300">
+            <div className="flex items-center gap-2 mb-1">
+              <BookOpen className="h-3 w-3 text-gray-600" />
+              <span className="text-xs font-medium text-gray-700">Scientific Evidence:</span>
+            </div>
+            <div className="text-xs text-gray-600">{seismicData.citation}</div>
           </div>
         </CardContent>
       </Card>

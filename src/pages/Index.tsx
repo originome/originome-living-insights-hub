@@ -7,12 +7,15 @@ import { DashboardHeader } from '@/components/DashboardHeader';
 import { ConfigurationSection } from '@/components/ConfigurationSection';
 import { CosmicConditionsSection } from '@/components/CosmicConditionsSection';
 import { AnalysisSection } from '@/components/AnalysisSection';
+import { PatternEnginePanel } from '@/components/PatternEnginePanel';
+import { AbsenteeismRiskPanel } from '@/components/AbsenteeismRiskPanel';
 import { useApiIntegration } from '@/hooks/useApiIntegration';
 import { useCosmicData } from '@/hooks/useCosmicData';
 import { useEnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 import { useLocationState } from '@/hooks/useLocationState';
 import { useToast } from '@/hooks/use-toast';
 import { getRelevantCitations } from '@/utils/literatureCitations';
+import { PatternEngineService } from '@/services/patternEngineService';
 
 const Index = () => {
   const { toast } = useToast();
@@ -48,6 +51,15 @@ const Index = () => {
     externalData.location?.lat,
     externalData.location?.lon
   );
+
+  // Generate pattern insights and absenteeism data
+  const patternInsight = cosmicData ? 
+    PatternEngineService.generatePatternOfTheDay(environmentalParams, externalData, cosmicData) :
+    null;
+
+  const absenteeismData = cosmicData ?
+    PatternEngineService.calculateAbsenteeismRisk(environmentalParams, externalData, cosmicData, buildingType) :
+    null;
 
   useEffect(() => {
     if (error) {
@@ -107,6 +119,22 @@ const Index = () => {
           onParamChange={handleParamChange}
           externalData={externalData}
         />
+
+        {/* Pattern Engine and Absenteeism Risk Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {patternInsight && (
+            <PatternEnginePanel
+              patternInsight={patternInsight}
+              isLoading={isCosmicLoading}
+            />
+          )}
+          {absenteeismData && (
+            <AbsenteeismRiskPanel
+              absenteeismData={absenteeismData}
+              isLoading={isCosmicLoading}
+            />
+          )}
+        </div>
 
         {/* Cosmic & Environmental Forces Section */}
         <CosmicConditionsSection
