@@ -1,35 +1,33 @@
 
-import React, { useState, useEffect } from 'react';
-import { LocationInput } from '@/components/LocationInput';
-import { CurrentConditions } from '@/components/CurrentConditions';
+import React, { useEffect } from 'react';
 import { OriginomeHeader } from '@/components/OriginomeHeader';
 import { EnvironmentalControls } from '@/components/EnvironmentalControls';
-import { PerformanceMetrics } from '@/components/PerformanceMetrics';
-import { ChartAnalysis } from '@/components/ChartAnalysis';
-import { SmartRecommendations } from '@/components/SmartRecommendations';
-import { CostBenefitAnalysis } from '@/components/CostBenefitAnalysis';
 import { LiteratureDatabase } from '@/components/LiteratureDatabase';
-import { LiteratureCitations } from '@/components/LiteratureCitations';
 import { DashboardHeader } from '@/components/DashboardHeader';
+import { ConfigurationSection } from '@/components/ConfigurationSection';
+import { CosmicConditionsSection } from '@/components/CosmicConditionsSection';
+import { AnalysisSection } from '@/components/AnalysisSection';
 import { useApiIntegration } from '@/hooks/useApiIntegration';
-import { useToast } from '@/hooks/use-toast';
-import { LiteratureService } from '@/services/literatureService';
-import { CosmicConditions } from '@/components/CosmicConditions';
 import { useCosmicData } from '@/hooks/useCosmicData';
+import { useEnvironmentalParams } from '@/hooks/useEnvironmentalParams';
+import { useLocationState } from '@/hooks/useLocationState';
+import { useToast } from '@/hooks/use-toast';
+import { getRelevantCitations } from '@/utils/literatureCitations';
 
 const Index = () => {
   const { toast } = useToast();
-  const [location, setLocation] = useState('');
-  const [buildingType, setBuildingType] = useState('office');
-  const [populationGroup, setPopulationGroup] = useState('adults');
-  const [environmentalParams, setEnvironmentalParams] = useState({
-    co2: 800,
-    pm25: 25,
-    temperature: 22,
-    light: 500,
-    noise: 45,
-    humidity: 45
-  });
+  
+  // Use custom hooks for state management
+  const {
+    location,
+    buildingType,
+    populationGroup,
+    handleLocationChange,
+    handleBuildingTypeChange,
+    handlePopulationGroupChange
+  } = useLocationState();
+
+  const { environmentalParams, handleParamChange } = useEnvironmentalParams();
 
   const {
     externalData,
@@ -51,43 +49,6 @@ const Index = () => {
     externalData.location?.lon
   );
 
-  const handleLocationChange = (newLocation: string) => {
-    setLocation(newLocation);
-    if (newLocation) {
-      toast({
-        title: "Location Updated",
-        description: "Fetching real-time environmental data and peer benchmarks...",
-      });
-    }
-  };
-
-  const handleBuildingTypeChange = (newType: string) => {
-    setBuildingType(newType);
-    if (location) {
-      toast({
-        title: "Building Type Updated",
-        description: "Recalculating health risks and productivity impacts...",
-      });
-    }
-  };
-
-  const handlePopulationGroupChange = (newGroup: string) => {
-    setPopulationGroup(newGroup);
-    if (location) {
-      toast({
-        title: "Population Group Updated", 
-        description: "Adjusting risk assessments for target demographics...",
-      });
-    }
-  };
-
-  const handleParamChange = (param: string, value: number) => {
-    setEnvironmentalParams(prev => ({
-      ...prev,
-      [param]: value
-    }));
-  };
-
   useEffect(() => {
     if (error) {
       toast({
@@ -108,40 +69,6 @@ const Index = () => {
     }
   }, [cosmicError, toast]);
 
-  // Get relevant literature citations for current parameters
-  const getRelevantCitations = () => {
-    const citations = [];
-    
-    // CO2 studies if elevated
-    if (environmentalParams.co2 > 600) {
-      const co2Studies = LiteratureService.getStudiesForParameter('co2');
-      citations.push(...co2Studies.map(study => ({
-        study,
-        relevantTo: `CO₂ levels of ${environmentalParams.co2}ppm impact cognitive performance`
-      })));
-    }
-
-    // PM2.5 studies if concerning
-    if (environmentalParams.pm25 > 12) {
-      const pm25Studies = LiteratureService.getStudiesForParameter('pm25');
-      citations.push(...pm25Studies.map(study => ({
-        study,
-        relevantTo: `PM2.5 levels of ${environmentalParams.pm25}μg/m³ affect health and cognition`
-      })));
-    }
-
-    // Temperature studies if suboptimal
-    if (Math.abs(environmentalParams.temperature - 21) > 1) {
-      const tempStudies = LiteratureService.getStudiesForParameter('temperature');
-      citations.push(...tempStudies.map(study => ({
-        study,
-        relevantTo: `Temperature of ${environmentalParams.temperature}°C impacts productivity`
-      })));
-    }
-
-    return citations.slice(0, 3); // Show top 3 most relevant
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
       {/* Originome Branded Header */}
@@ -161,29 +88,18 @@ const Index = () => {
       
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Configuration Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <LocationInput
-            location={location}
-            buildingType={buildingType}
-            populationGroup={populationGroup}
-            onLocationChange={handleLocationChange}
-            onBuildingTypeChange={handleBuildingTypeChange}
-            onPopulationGroupChange={handlePopulationGroupChange}
-          />
-          
-          <CurrentConditions 
-            externalData={externalData}
-            isLoading={isLoading}
-            onRefresh={refreshData}
-          />
-          
-          <PerformanceMetrics 
-            environmentalParams={environmentalParams}
-            externalData={externalData}
-            buildingType={buildingType}
-            populationGroup={populationGroup}
-          />
-        </div>
+        <ConfigurationSection
+          location={location}
+          buildingType={buildingType}
+          populationGroup={populationGroup}
+          onLocationChange={handleLocationChange}
+          onBuildingTypeChange={handleBuildingTypeChange}
+          onPopulationGroupChange={handlePopulationGroupChange}
+          externalData={externalData}
+          isLoading={isLoading}
+          onRefresh={refreshData}
+          environmentalParams={environmentalParams}
+        />
 
         {/* Environmental Controls */}
         <EnvironmentalControls
@@ -193,53 +109,19 @@ const Index = () => {
         />
 
         {/* Cosmic & Environmental Forces Section */}
-        {cosmicData && (
-          <div>
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Multiscale Environmental Intelligence
-              </h2>
-              <p className="text-gray-600 text-sm">
-                Beyond traditional air quality: cosmic and environmental forces affecting organizational performance
-              </p>
-            </div>
-            <CosmicConditions
-              geomagneticData={cosmicData.geomagnetic}
-              solarData={cosmicData.solar}
-              seasonalData={cosmicData.seasonal}
-              seismicData={cosmicData.seismic}
-              isLoading={isCosmicLoading}
-            />
-          </div>
-        )}
+        <CosmicConditionsSection
+          cosmicData={cosmicData}
+          isCosmicLoading={isCosmicLoading}
+        />
 
         {/* Analysis and Insights Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-6">
-            <ChartAnalysis 
-              environmentalParams={environmentalParams}
-              externalData={externalData}
-              buildingType={buildingType}
-            />
-            
-            <LiteratureCitations citations={getRelevantCitations()} />
-          </div>
-          
-          <div className="space-y-6">
-            <SmartRecommendations 
-              environmentalParams={environmentalParams}
-              externalData={externalData}
-              buildingType={buildingType}
-              populationGroup={populationGroup}
-            />
-            
-            <CostBenefitAnalysis 
-              environmentalParams={environmentalParams}
-              externalData={externalData}
-              buildingType={buildingType}
-            />
-          </div>
-        </div>
+        <AnalysisSection
+          environmentalParams={environmentalParams}
+          externalData={externalData}
+          buildingType={buildingType}
+          populationGroup={populationGroup}
+          getRelevantCitations={() => getRelevantCitations(environmentalParams)}
+        />
 
         {/* Literature Database */}
         <LiteratureDatabase />
