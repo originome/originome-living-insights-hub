@@ -16,19 +16,21 @@ export const useCosmicData = (latitude?: number, longitude?: number) => {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const fetchCosmicData = async () => {
-    if (!latitude || !longitude) return;
+    // Always fetch cosmic data, using defaults if no coordinates
+    const lat = latitude || 40.7128; // Default to NYC
+    const lon = longitude || -74.0060;
     
     setIsLoading(true);
     setError(null);
     
     try {
-      console.log('Fetching cosmic data for coordinates:', { latitude, longitude });
+      console.log('Fetching cosmic data for coordinates:', { lat, lon });
       
       const [geomagnetic, solar, seasonal, seismic] = await Promise.all([
         CosmicDataService.fetchGeomagneticData(),
         CosmicDataService.fetchSolarData(),
-        CosmicDataService.fetchSeasonalData(latitude),
-        CosmicDataService.fetchSeismicData(latitude, longitude)
+        CosmicDataService.fetchSeasonalData(lat),
+        CosmicDataService.fetchSeismicData(lat, lon)
       ]);
 
       const data: CosmicData = {
@@ -51,13 +53,12 @@ export const useCosmicData = (latitude?: number, longitude?: number) => {
   };
 
   useEffect(() => {
+    // Fetch immediately when component mounts
     fetchCosmicData();
   }, [latitude, longitude]);
 
   // Auto-refresh every 15 minutes
   useEffect(() => {
-    if (!latitude || !longitude) return;
-    
     const interval = setInterval(() => {
       fetchCosmicData();
     }, 15 * 60 * 1000);

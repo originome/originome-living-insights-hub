@@ -113,14 +113,7 @@ const Index = () => {
           environmentalParams={environmentalParams}
         />
 
-        {/* Environmental Controls */}
-        <EnvironmentalControls
-          params={environmentalParams}
-          onParamChange={handleParamChange}
-          externalData={externalData}
-        />
-
-        {/* Pattern Engine and Absenteeism Risk Row */}
+        {/* Pattern Engine and Absenteeism Risk Row - PROMINENTLY DISPLAYED */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {patternInsight && (
             <PatternEnginePanel
@@ -136,10 +129,17 @@ const Index = () => {
           )}
         </div>
 
-        {/* Cosmic & Environmental Forces Section */}
+        {/* Cosmic & Environmental Forces Section - PROMINENTLY DISPLAYED */}
         <CosmicConditionsSection
           cosmicData={cosmicData}
           isCosmicLoading={isCosmicLoading}
+        />
+
+        {/* Environmental Controls */}
+        <EnvironmentalControls
+          params={environmentalParams}
+          onParamChange={handleParamChange}
+          externalData={externalData}
         />
 
         {/* Analysis and Insights Row */}
