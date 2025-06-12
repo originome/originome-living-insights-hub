@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { LocationInput } from '@/components/LocationInput';
 import { CurrentConditions } from '@/components/CurrentConditions';
@@ -38,7 +39,7 @@ const Index = () => {
     refreshData
   } = useApiIntegration(location, buildingType, populationGroup);
 
-  // Add cosmic data integration
+  // Add cosmic data integration with correct coordinate access
   const {
     cosmicData,
     isLoading: isCosmicLoading,
@@ -46,8 +47,8 @@ const Index = () => {
     lastUpdated: cosmicLastUpdated,
     refreshData: refreshCosmicData
   } = useCosmicData(
-    externalData.location?.coordinates?.latitude,
-    externalData.location?.coordinates?.longitude
+    externalData.location?.lat,
+    externalData.location?.lon
   );
 
   const handleLocationChange = (newLocation: string) => {
