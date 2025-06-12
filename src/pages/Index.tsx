@@ -9,6 +9,9 @@ import { CosmicConditionsSection } from '@/components/CosmicConditionsSection';
 import { AnalysisSection } from '@/components/AnalysisSection';
 import { PatternEnginePanel } from '@/components/PatternEnginePanel';
 import { AbsenteeismRiskPanel } from '@/components/AbsenteeismRiskPanel';
+import { PatternOfTheDayBanner } from '@/components/PatternOfTheDayBanner';
+import { HistoricalInsightPanel } from '@/components/HistoricalInsightPanel';
+import { WhatMakesOriginomeDifferentModal } from '@/components/WhatMakesOriginomeDifferentModal';
 import { useApiIntegration } from '@/hooks/useApiIntegration';
 import { useCosmicData } from '@/hooks/useCosmicData';
 import { useEnvironmentalParams } from '@/hooks/useEnvironmentalParams';
@@ -113,6 +116,20 @@ const Index = () => {
           environmentalParams={environmentalParams}
         />
 
+        {/* What Makes Originome Different Button */}
+        <div className="flex justify-center">
+          <WhatMakesOriginomeDifferentModal />
+        </div>
+
+        {/* Pattern of the Day Banner - TOP PRIORITY */}
+        <PatternOfTheDayBanner
+          environmentalParams={environmentalParams}
+          externalData={externalData}
+          cosmicData={cosmicData}
+          buildingType={buildingType}
+          populationGroup={populationGroup}
+        />
+
         {/* Pattern Engine and Absenteeism Risk Row - PROMINENTLY DISPLAYED */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {patternInsight && (
@@ -124,10 +141,15 @@ const Index = () => {
           {absenteeismData && (
             <AbsenteeismRiskPanel
               absenteeismData={absenteeismData}
+              buildingType={buildingType}
+              populationGroup={populationGroup}
               isLoading={isCosmicLoading}
             />
           )}
         </div>
+
+        {/* Historical Insight Panel */}
+        <HistoricalInsightPanel />
 
         {/* Cosmic & Environmental Forces Section - PROMINENTLY DISPLAYED */}
         <CosmicConditionsSection

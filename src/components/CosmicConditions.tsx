@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Zap, Sun, Moon, Leaf, AlertTriangle, BookOpen, Waves } from 'lucide-react';
 import { GeomagneticData, SolarData, SeasonalData, SeismicData } from '@/services/cosmicDataService';
+import { DataPanelExplainer } from '@/components/DataPanelExplainer';
 
 interface CosmicConditionsProps {
   geomagneticData?: GeomagneticData;
@@ -66,9 +67,12 @@ export const CosmicConditions: React.FC<CosmicConditionsProps> = ({
       {geomagneticData && (
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Zap className="h-5 w-5 text-purple-600" />
-              Geomagnetic Activity
+            <CardTitle className="flex items-center justify-between text-lg">
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-purple-600" />
+                Geomagnetic Activity
+              </div>
+              <DataPanelExplainer type="geomagnetic" currentValue={geomagneticData.kpIndex} />
             </CardTitle>
             <div className="text-xs text-gray-500">
               Earth's magnetic field disturbances affecting human physiology
@@ -120,9 +124,12 @@ export const CosmicConditions: React.FC<CosmicConditionsProps> = ({
       {solarData && (
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Sun className="h-5 w-5 text-orange-600" />
-              Solar Weather
+            <CardTitle className="flex items-center justify-between text-lg">
+              <div className="flex items-center gap-2">
+                <Sun className="h-5 w-5 text-orange-600" />
+                Solar Weather
+              </div>
+              <DataPanelExplainer type="solar" currentValue={solarData.sunspotNumber} />
             </CardTitle>
             <div className="text-xs text-gray-500">
               Solar electromagnetic radiation affecting circadian rhythms
@@ -174,9 +181,12 @@ export const CosmicConditions: React.FC<CosmicConditionsProps> = ({
       {seasonalData && (
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Leaf className="h-5 w-5 text-green-600" />
-              Seasonal & Allergen Proxies
+            <CardTitle className="flex items-center justify-between text-lg">
+              <div className="flex items-center gap-2">
+                <Leaf className="h-5 w-5 text-green-600" />
+                Seasonal & Allergen Proxies
+              </div>
+              <DataPanelExplainer type="pollen" currentValue={seasonalData.pollenCount.level} />
             </CardTitle>
             <div className="text-xs text-gray-500">
               Natural cycles and allergens affecting human biological rhythms
@@ -255,9 +265,12 @@ export const CosmicConditions: React.FC<CosmicConditionsProps> = ({
       {seismicData && (
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Waves className="h-5 w-5 text-indigo-600" />
-              Seismic Activity
+            <CardTitle className="flex items-center justify-between text-lg">
+              <div className="flex items-center gap-2">
+                <Waves className="h-5 w-5 text-indigo-600" />
+                Seismic Activity
+              </div>
+              <DataPanelExplainer type="seismic" currentValue={seismicData.maxMagnitude} />
             </CardTitle>
             <div className="text-xs text-gray-500">
               Geological vibrations affecting subconscious stress levels

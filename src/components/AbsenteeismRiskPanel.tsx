@@ -3,16 +3,20 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Users, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Users, TrendingUp, AlertTriangle, Calendar, Clock } from 'lucide-react';
 import { AbsenteeismData } from '@/services/patternEngineService';
 
 interface AbsenteeismRiskPanelProps {
   absenteeismData: AbsenteeismData;
+  buildingType: string;
+  populationGroup: string;
   isLoading?: boolean;
 }
 
 export const AbsenteeismRiskPanel: React.FC<AbsenteeismRiskPanelProps> = ({
   absenteeismData,
+  buildingType,
+  populationGroup,
   isLoading = false
 }) => {
   const getRiskColor = (rate: number) => {
@@ -27,6 +31,33 @@ export const AbsenteeismRiskPanel: React.FC<AbsenteeismRiskPanelProps> = ({
     if (rate > 10) return 'Elevated';
     if (rate > 7) return 'Moderate';
     return 'Low Risk';
+  };
+
+  const getConcreteOutcomes = () => {
+    const riskIncrease = Math.max(0, absenteeismData.currentRate - absenteeismData.historicalAverage);
+    const extraSickDays = Math.round((riskIncrease / 100) * 20); // Assuming 20 average sick days per year baseline
+    
+    if (buildingType === 'hotel' || buildingType === 'retail') {
+      return {
+        primary: `Guest complaints likely to rise ${Math.round(riskIncrease * 0.8)}% this week`,
+        secondary: `Expect ${Math.round(riskIncrease * 0.6)} additional comfort-related requests per day`
+      };
+    } else if (buildingType === 'school') {
+      return {
+        primary: `Expect ${extraSickDays} additional student absences this month`,
+        secondary: `Afternoon focus may drop ${Math.round(riskIncrease * 0.7)}% during peak hours`
+      };
+    } else if (buildingType === 'healthcare') {
+      return {
+        primary: `Patient agitation may increase ${Math.round(riskIncrease * 0.9)}%`,
+        secondary: `Staff stress responses up ${Math.round(riskIncrease * 0.8)}% during peak conditions`
+      };
+    } else {
+      return {
+        primary: `Based on today's signals, expect ${extraSickDays} extra sick days this month`,
+        secondary: `Productivity may drop ${Math.round(riskIncrease * 0.6)}% during afternoon hours`
+      };
+    }
   };
 
   if (isLoading) {
@@ -49,6 +80,7 @@ export const AbsenteeismRiskPanel: React.FC<AbsenteeismRiskPanelProps> = ({
   }
 
   const riskIncrease = Math.max(0, absenteeismData.currentRate - absenteeismData.historicalAverage);
+  const outcomes = getConcreteOutcomes();
 
   return (
     <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
@@ -88,13 +120,21 @@ export const AbsenteeismRiskPanel: React.FC<AbsenteeismRiskPanelProps> = ({
         </div>
 
         {riskIncrease > 0 && (
-          <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="h-4 w-4 text-orange-600" />
-              <span className="text-sm font-medium text-orange-800">Elevated Risk Alert</span>
+          <div className="space-y-3">
+            <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar className="h-4 w-4 text-orange-600" />
+                <span className="text-sm font-medium text-orange-800">Expected This Month:</span>
+              </div>
+              <div className="text-sm text-orange-700 font-medium">{outcomes.primary}</div>
             </div>
-            <div className="text-xs text-orange-700">
-              {riskIncrease.toFixed(1)}% increase above historical baseline due to current conditions
+
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">Additional Impact:</span>
+              </div>
+              <div className="text-sm text-blue-700">{outcomes.secondary}</div>
             </div>
           </div>
         )}
