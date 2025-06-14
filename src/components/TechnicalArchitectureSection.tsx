@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { RealTimeStreamingDashboard } from '@/components/RealTimeStreamingDashboard';
 import { AdvancedMLPatternDashboard } from '@/components/AdvancedMLPatternDashboard';
 import { ExternalData } from '@/hooks/useApiIntegration';
@@ -10,17 +10,28 @@ interface TechnicalArchitectureSectionProps {
   environmentalParams: EnvironmentalParams;
   externalData: ExternalData;
   cosmicData: CosmicData | null;
+  buildingType?: string;
 }
 
 export const TechnicalArchitectureSection: React.FC<TechnicalArchitectureSectionProps> = ({
   environmentalParams,
   externalData,
-  cosmicData
+  cosmicData,
+  buildingType = 'office'
 }) => {
+  const [streamingActive, setStreamingActive] = useState(true);
+
   return (
     <>
       {/* Real-Time Streaming Analytics */}
-      <RealTimeStreamingDashboard />
+      <RealTimeStreamingDashboard
+        environmentalParams={environmentalParams}
+        externalData={externalData}
+        cosmicData={cosmicData}
+        buildingType={buildingType}
+        streamingActive={streamingActive}
+        onToggleStreaming={() => setStreamingActive(!streamingActive)}
+      />
 
       {/* Advanced Pattern Recognition Algorithms */}
       <AdvancedMLPatternDashboard
