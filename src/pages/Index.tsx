@@ -5,14 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Building, Users, MapPin, Share, Download, Zap } from 'lucide-react';
 import { OriginomeHeader } from '@/components/OriginomeHeader';
-import { RealTimeStreamingDashboard } from '@/components/RealTimeStreamingDashboard';
+import { RiskEventHorizon } from '@/components/RiskEventHorizon';
+import { VelocityDetectionModule } from '@/components/VelocityDetectionModule';
 import { GeographicMicroAnomalyPanel } from '@/components/GeographicMicroAnomalyPanel';
 import { AssetLearningPanel } from '@/components/AssetLearningPanel';
-import { CrossDomainCorrelationPanel } from '@/components/CrossDomainCorrelationPanel';
-import { InteractivePatternExplorer } from '@/components/InteractivePatternExplorer';
-import { CompoundRiskMatrix } from '@/components/CompoundRiskMatrix';
-import { RateOfChangeAnalytics } from '@/components/RateOfChangeAnalytics';
-import { PredictiveAnalyticsPanel } from '@/components/PredictiveAnalyticsPanel';
 import { IntelligentAlertSystem } from '@/components/IntelligentAlertSystem';
 import { useApiIntegration } from '@/hooks/useApiIntegration';
 import { useCosmicData } from '@/hooks/useCosmicData';
@@ -22,7 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('intelligence');
+  const [activeTab, setActiveTab] = useState('event-horizon');
   const [streamingActive, setStreamingActive] = useState(true);
   
   // Use custom hooks for state management
@@ -68,7 +64,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      {/* Streamlined Header */}
+      {/* Enterprise Header */}
       <OriginomeHeader 
         location={externalData.location}
         buildingType={buildingType}
@@ -76,27 +72,30 @@ const Index = () => {
         lastUpdated={lastUpdated}
       />
       
-      {/* Critical Alert Bar - Upper Left Priority */}
-      <div className="bg-gradient-to-r from-red-50 to-orange-50 border-b border-red-200">
+      {/* Enterprise Status Bar */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Zap className="h-4 w-4 text-red-600 animate-pulse" />
-              <span className="text-sm font-medium text-red-800">
-                Real-Time Pattern Intelligence Active
+              <Zap className="h-4 w-4 text-blue-600 animate-pulse" />
+              <span className="text-sm font-medium text-blue-800">
+                Perpetual Risk Monitoring Active
               </span>
               <Badge variant={streamingActive ? "default" : "secondary"} className="text-xs">
-                {streamingActive ? "STREAMING" : "PAUSED"}
+                {streamingActive ? "LIVE INTELLIGENCE" : "PAUSED"}
               </Badge>
+              <div className="text-xs text-blue-600">
+                Enterprise-Grade • Full Audit Trail • 99.9% Uptime
+              </div>
             </div>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" className="text-xs">
                 <Share className="h-3 w-3 mr-1" />
-                Share
+                Share Intelligence
               </Button>
               <Button size="sm" className="text-xs bg-blue-600 hover:bg-blue-700">
                 <Download className="h-3 w-3 mr-1" />
-                Export
+                Export Report
               </Button>
             </div>
           </div>
@@ -106,66 +105,43 @@ const Index = () => {
       <div className="container mx-auto px-4 py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-6">
-            <TabsTrigger value="intelligence" className="text-sm font-medium">
-              Pattern Intelligence
+            <TabsTrigger value="event-horizon" className="text-sm font-medium">
+              Risk Event Horizon
+            </TabsTrigger>
+            <TabsTrigger value="velocity" className="text-sm font-medium">
+              Velocity Detection
             </TabsTrigger>
             <TabsTrigger value="geographic" className="text-sm font-medium">
-              Geographic Anomalies
+              Micro-Anomaly Map
             </TabsTrigger>
             <TabsTrigger value="assets" className="text-sm font-medium">
-              Asset Learning
-            </TabsTrigger>
-            <TabsTrigger value="correlations" className="text-sm font-medium">
-              Cross-Domain
+              Asset Intelligence
             </TabsTrigger>
           </TabsList>
 
-          {/* Pattern Intelligence Tab - Primary Focus */}
-          <TabsContent value="intelligence" className="space-y-4">
-            {/* Real-Time Streaming Dashboard - Top Priority */}
-            <RealTimeStreamingDashboard
+          {/* Risk Event Horizon - Primary Tab */}
+          <TabsContent value="event-horizon" className="space-y-4">
+            <RiskEventHorizon
               environmentalParams={environmentalParams}
               externalData={externalData}
               cosmicData={cosmicData}
               buildingType={buildingType}
-              streamingActive={streamingActive}
-              onToggleStreaming={() => setStreamingActive(!streamingActive)}
             />
 
-            {/* Interactive Pattern Explorer */}
-            <InteractivePatternExplorer
+            {/* Intelligent Alert System - Compound Patterns */}
+            <IntelligentAlertSystem
               environmentalParams={environmentalParams}
               externalData={externalData}
               cosmicData={cosmicData}
               buildingType={buildingType}
-              onLocationChange={handleLocationChange}
-              onBuildingTypeChange={handleBuildingTypeChange}
-              onPopulationGroupChange={handlePopulationGroupChange}
-              onParamChange={handleParamChange}
-              location={location}
-              populationGroup={populationGroup}
             />
+          </TabsContent>
 
-            {/* Compound Risk & Rate of Change - Side by Side */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              <CompoundRiskMatrix
-                environmentalParams={environmentalParams}
-                externalData={externalData}
-                cosmicData={cosmicData}
-                buildingType={buildingType}
-              />
-              <RateOfChangeAnalytics
-                environmentalParams={environmentalParams}
-                externalData={externalData}
-              />
-            </div>
-
-            {/* Predictive Analytics */}
-            <PredictiveAnalyticsPanel
+          {/* Velocity Detection Module */}
+          <TabsContent value="velocity" className="space-y-4">
+            <VelocityDetectionModule
               environmentalParams={environmentalParams}
               externalData={externalData}
-              cosmicData={cosmicData}
-              buildingType={buildingType}
             />
           </TabsContent>
 
@@ -180,7 +156,7 @@ const Index = () => {
             )}
           </TabsContent>
 
-          {/* Asset-Specific Learning */}
+          {/* Asset-Specific Intelligence */}
           <TabsContent value="assets" className="space-y-4">
             {externalData.location && (
               <AssetLearningPanel
@@ -189,15 +165,6 @@ const Index = () => {
                 currentConditions={environmentalParams}
               />
             )}
-          </TabsContent>
-
-          {/* Cross-Sector Correlations */}
-          <TabsContent value="correlations" className="space-y-4">
-            <CrossDomainCorrelationPanel
-              currentSector={buildingType}
-              environmentalData={environmentalParams}
-              buildingType={buildingType}
-            />
           </TabsContent>
         </Tabs>
       </div>
