@@ -147,23 +147,43 @@ const Index = () => {
 
           {/* Geographic Micro-Anomaly Detection */}
           <TabsContent value="geographic" className="space-y-4">
-            {externalData.location && (
+            {externalData.location ? (
               <GeographicMicroAnomalyPanel
                 latitude={externalData.location.lat}
                 longitude={externalData.location.lon}
                 location={externalData.location.city}
               />
+            ) : (
+              <div className="text-center py-12">
+                <MapPin className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                  Location Data Loading
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Acquiring geographic coordinates for micro-anomaly detection...
+                </p>
+              </div>
             )}
           </TabsContent>
 
           {/* Asset-Specific Intelligence */}
           <TabsContent value="assets" className="space-y-4">
-            {externalData.location && (
+            {externalData.location ? (
               <AssetLearningPanel
                 buildingType={buildingType}
                 location={{ lat: externalData.location.lat, lon: externalData.location.lon }}
                 currentConditions={environmentalParams}
               />
+            ) : (
+              <div className="text-center py-12">
+                <Building className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                  Asset Intelligence Loading
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Initializing asset fingerprinting and vulnerability analysis...
+                </p>
+              </div>
             )}
           </TabsContent>
         </Tabs>

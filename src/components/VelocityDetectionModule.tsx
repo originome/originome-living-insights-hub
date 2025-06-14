@@ -42,6 +42,10 @@ export const VelocityDetectionModule: React.FC<VelocityDetectionModuleProps> = (
   const [processingRate, setProcessingRate] = useState(0);
 
   useEffect(() => {
+    // Initialize with some historical data
+    const initialData = generateInitialData();
+    setVelocityData(initialData);
+
     const interval = setInterval(() => {
       if (isMonitoring) {
         const newDataPoint = generateVelocityDataPoint();
@@ -59,12 +63,44 @@ export const VelocityDetectionModule: React.FC<VelocityDetectionModuleProps> = (
     return () => clearInterval(interval);
   }, [environmentalParams, isMonitoring]);
 
+  const generateInitialData = (): VelocityData[] => {
+    const data: VelocityData[] = [];
+    const now = new Date();
+    
+    for (let i = 19; i >= 0; i--) {
+      const timestamp = new Date(now.getTime() - i * 2000);
+      const co2 = environmentalParams.co2 + (Math.random() - 0.5) * 50;
+      const pm25 = Math.max(0, environmentalParams.pm25 + (Math.random() - 0.5) * 10);
+      const temperature = environmentalParams.temperature + (Math.random() - 0.5) * 2;
+      
+      // Calculate velocities based on previous point
+      const prevData = data[data.length - 1];
+      const co2Velocity = prevData ? (co2 - prevData.co2) * 30 : 0;
+      const pm25Velocity = prevData ? (pm25 - prevData.pm25) * 30 : 0;
+      const tempVelocity = prevData ? (temperature - prevData.temperature) * 30 : 0;
+      const co2Acceleration = prevData ? (co2Velocity - prevData.co2Velocity) : 0;
+
+      data.push({
+        timestamp: timestamp.toLocaleTimeString(),
+        co2,
+        co2Velocity,
+        co2Acceleration,
+        pm25,
+        pm25Velocity,
+        temperature,
+        tempVelocity
+      });
+    }
+    
+    return data;
+  };
+
   const generateVelocityDataPoint = (): VelocityData => {
     const now = new Date();
     const timestamp = now.toLocaleTimeString();
     
     // Simulate realistic velocity calculations with occasional spikes
-    const suddenChange = Math.random() < 0.1; // 10% chance of sudden change
+    const suddenChange = Math.random() < 0.15; // 15% chance of sudden change
     
     const co2 = environmentalParams.co2 + (suddenChange ? (Math.random() - 0.5) * 100 : (Math.random() - 0.5) * 20);
     const pm25 = Math.max(0, environmentalParams.pm25 + (suddenChange ? (Math.random() - 0.5) * 15 : (Math.random() - 0.5) * 3));

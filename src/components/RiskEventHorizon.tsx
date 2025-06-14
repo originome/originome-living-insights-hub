@@ -54,17 +54,69 @@ export const RiskEventHorizon: React.FC<RiskEventHorizonProps> = ({
   });
 
   useEffect(() => {
+    // Generate initial events
+    const initialEvents = generateInitialEvents();
+    setRiskEvents(initialEvents);
+
     // Perpetual monitoring - scan every 30 seconds
     const scanInterval = setInterval(() => {
       if (monitoringActive) {
         const newEvents = detectRiskEvents();
-        setRiskEvents(prev => [...newEvents, ...prev].slice(0, 20)); // Keep latest 20 events
+        if (newEvents.length > 0) {
+          setRiskEvents(prev => [...newEvents, ...prev].slice(0, 20)); // Keep latest 20 events
+        }
         setLastScan(new Date());
       }
     }, 30000);
 
     return () => clearInterval(scanInterval);
   }, [environmentalParams, cosmicData, monitoringActive]);
+
+  const generateInitialEvents = (): RiskEvent[] => {
+    const events: RiskEvent[] = [];
+    const now = new Date();
+
+    // Generate some initial compound pattern events based on current conditions
+    if (environmentalParams.co2 > 800) {
+      events.push({
+        id: `compound_${now.getTime()}_1`,
+        timestamp: new Date(now.getTime() - 300000), // 5 minutes ago
+        type: 'compound_pattern',
+        severity: 'high',
+        title: 'Compound Pattern PP-247 Active',
+        description: '4.2x cognitive performance decline detected due to elevated CO₂ combined with low barometric pressure',
+        riskMultiplier: 4.2,
+        confidence: 89,
+        actionable: true,
+        status: 'active',
+        dataLineage: {
+          publicSources: ['NOAA Weather Data', 'Local Air Quality Index'],
+          privateSources: ['Internal CO₂ Sensors', 'HVAC System Logs']
+        }
+      });
+    }
+
+    if (cosmicData?.geomagnetic?.kpIndex >= 4) {
+      events.push({
+        id: `compound_${now.getTime()}_2`,
+        timestamp: new Date(now.getTime() - 900000), // 15 minutes ago
+        type: 'compound_pattern',
+        severity: 'critical',
+        title: 'Compound Pattern PP-847 Detected',
+        description: '8.2x failure probability for electronic systems due to Kp4+ geomagnetic activity combined with elevated particulates',
+        riskMultiplier: 8.2,
+        confidence: 92,
+        actionable: true,
+        status: 'active',
+        dataLineage: {
+          publicSources: ['NOAA Space Weather', 'EPA AirNow'],
+          privateSources: ['Asset Maintenance Log #32A', 'Power Grid Monitoring']
+        }
+      });
+    }
+
+    return events;
+  };
 
   const detectRiskEvents = (): RiskEvent[] => {
     const events: RiskEvent[] = [];
@@ -107,6 +159,27 @@ export const RiskEventHorizon: React.FC<RiskEventHorizonProps> = ({
         dataLineage: {
           publicSources: [],
           privateSources: ['Internal CO₂ Sensors', 'HVAC Control System']
+        }
+      });
+    }
+
+    // Asset Fingerprint Detection
+    if (buildingType === 'office' && environmentalParams.temperature > 25 && environmentalParams.humidity > 65) {
+      events.push({
+        id: `asset_${now.getTime()}`,
+        timestamp: now,
+        type: 'asset_fingerprint',
+        severity: 'medium',
+        title: 'Asset Vulnerability Signature Match',
+        description: 'HVAC Unit #3 shows 3.1x higher failure risk under current thermal-humidity conditions based on historical fingerprint',
+        assetId: 'HVAC_03',
+        riskMultiplier: 3.1,
+        confidence: 78,
+        actionable: true,
+        status: 'active',
+        dataLineage: {
+          publicSources: ['Weather Service'],
+          privateSources: ['Asset Performance History', 'Maintenance Records']
         }
       });
     }
