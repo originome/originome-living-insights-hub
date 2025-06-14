@@ -57,7 +57,7 @@ const Index = () => {
 
   // Generate pattern insights and absenteeism data
   const patternInsight = cosmicData ? 
-    PatternEngineService.generatePatternOfTheDay(environmentalParams, externalData, cosmicData) :
+    PatternEngineService.generatePatternOfTheDay(environmentalParams, externalData, cosmicData, buildingType) :
     null;
 
   const absenteeismData = cosmicData ?

@@ -20,12 +20,20 @@ export interface PatternInsight {
   };
 }
 
+export interface AbsenteeismData {
+  currentRate: number;
+  historicalAverage: number;
+  riskFactors: string[];
+  expectedIncrease: number;
+  confidenceLevel: number;
+}
+
 export class PatternEngineService {
   static generatePatternOfTheDay(
     environmentalParams: any,
-    cosmicData: any,
     externalData: any,
-    buildingType: string
+    cosmicData: any,
+    buildingType?: string
   ): PatternInsight {
     // High pollen + geomagnetic convergence pattern
     if (cosmicData?.seasonal?.pollenCount?.level === 'Very High' && cosmicData?.geomagnetic?.kpIndex > 5) {
@@ -84,6 +92,75 @@ export class PatternEngineService {
       citation: 'Meta-analysis of environmental psychology studies showing 15-23% performance gains during optimal multi-factor conditions.',
       historicalContext: 'Full stability occurs in 12% of observations and correlates with peak organizational performance metrics.',
       preventedIncidentValue: 0
+    };
+  }
+
+  static calculateAbsenteeismRisk(
+    environmentalParams: any,
+    externalData: any,
+    cosmicData: any,
+    buildingType: string
+  ): AbsenteeismData {
+    let baseRate = 8.2; // Average baseline absenteeism rate
+    let riskFactors: string[] = [];
+    
+    // Environmental risk factors
+    if (environmentalParams.co2 > 800) {
+      baseRate += 1.5;
+      riskFactors.push('Elevated CO2 levels (>800 ppm)');
+    }
+    
+    if (environmentalParams.pm25 > 20) {
+      baseRate += 2.1;
+      riskFactors.push('High PM2.5 pollution (>20 μg/m³)');
+    }
+    
+    if (Math.abs(environmentalParams.temperature - 21) > 3) {
+      baseRate += 1.2;
+      riskFactors.push('Suboptimal temperature conditions');
+    }
+    
+    if (environmentalParams.humidity > 60 || environmentalParams.humidity < 30) {
+      baseRate += 0.8;
+      riskFactors.push('Poor humidity control');
+    }
+    
+    // Cosmic factors
+    if (cosmicData?.geomagnetic?.kpIndex > 4) {
+      baseRate += 1.8;
+      riskFactors.push('Geomagnetic storm activity');
+    }
+    
+    if (cosmicData?.solar?.sunspotNumber > 120) {
+      baseRate += 1.3;
+      riskFactors.push('High solar activity');
+    }
+    
+    if (cosmicData?.seasonal?.pollenCount?.level === 'Very High') {
+      baseRate += 2.5;
+      riskFactors.push('Very high pollen levels');
+    }
+    
+    // Building type adjustments
+    const buildingAdjustments: { [key: string]: number } = {
+      'office': 0,
+      'school': 1.2,
+      'healthcare': -0.8,
+      'retail': 0.5,
+      'hotel': 0.3
+    };
+    
+    baseRate += buildingAdjustments[buildingType] || 0;
+    
+    const historicalAverage = 8.2;
+    const expectedIncrease = Math.max(0, baseRate - historicalAverage);
+    
+    return {
+      currentRate: Math.min(25, baseRate), // Cap at 25%
+      historicalAverage,
+      riskFactors,
+      expectedIncrease,
+      confidenceLevel: riskFactors.length > 2 ? 85 : 72
     };
   }
 
