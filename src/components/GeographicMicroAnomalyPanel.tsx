@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Satellite, MapPin, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Satellite, MapPin, AlertTriangle } from 'lucide-react';
 import { SatelliteDataService, SatelliteData, MicroAnomalyData } from '@/services/satelliteDataService';
+import InteractiveMap from './InteractiveMap';
 
 interface GeographicMicroAnomalyPanelProps {
   latitude: number;
@@ -199,21 +199,22 @@ export const GeographicMicroAnomalyPanel: React.FC<GeographicMicroAnomalyPanelPr
       )}
 
       {/* Interactive Mapping Placeholder */}
-      <Card className="bg-gray-50">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-gray-600" />
             Interactive Environmental Hot-Spot Map
           </CardTitle>
+           <div className="text-sm text-gray-600">
+            Hyperlocal environmental anomalies visualized. Click circles for details.
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="h-32 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg flex items-center justify-center">
-            <div className="text-center text-gray-600">
-              <TrendingUp className="h-8 w-8 mx-auto mb-2" />
-              <div className="text-sm">Interactive mapping visualization</div>
-              <div className="text-xs">Environmental hot-spots • Anomaly zones • Risk gradients</div>
-            </div>
-          </div>
+           <InteractiveMap
+            latitude={latitude}
+            longitude={longitude}
+            anomalies={microAnomalies}
+          />
         </CardContent>
       </Card>
     </div>
