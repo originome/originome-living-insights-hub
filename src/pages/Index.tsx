@@ -1,26 +1,16 @@
 
 import React, { useEffect } from 'react';
 import { OriginomeHeader } from '@/components/OriginomeHeader';
-import { EnvironmentalControls } from '@/components/EnvironmentalControls';
-import { LiteratureDatabase } from '@/components/LiteratureDatabase';
 import { DashboardHeader } from '@/components/DashboardHeader';
-import { ConfigurationSection } from '@/components/ConfigurationSection';
-import { CosmicConditionsSection } from '@/components/CosmicConditionsSection';
-import { AnalysisSection } from '@/components/AnalysisSection';
-import { PatternEnginePanel } from '@/components/PatternEnginePanel';
-import { AbsenteeismRiskPanel } from '@/components/AbsenteeismRiskPanel';
 import { PatternOfTheDayBanner } from '@/components/PatternOfTheDayBanner';
-import { HistoricalInsightPanel } from '@/components/HistoricalInsightPanel';
-import { WhatMakesOriginomeDifferentModal } from '@/components/WhatMakesOriginomeDifferentModal';
-import { CompoundRiskMatrix } from '@/components/CompoundRiskMatrix';
-import { RateOfChangeAnalytics } from '@/components/RateOfChangeAnalytics';
-import { PatternRecognitionEngine } from '@/components/PatternRecognitionEngine';
+import { ConfigurationControls } from '@/components/ConfigurationControls';
+import { PatternRiskAnalysis } from '@/components/PatternRiskAnalysis';
+import { AnalysisDatabase } from '@/components/AnalysisDatabase';
 import { useApiIntegration } from '@/hooks/useApiIntegration';
 import { useCosmicData } from '@/hooks/useCosmicData';
 import { useEnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 import { useLocationState } from '@/hooks/useLocationState';
 import { useToast } from '@/hooks/use-toast';
-import { getRelevantCitations } from '@/utils/literatureCitations';
 import { PatternEngineService } from '@/services/patternEngineService';
 
 const Index = () => {
@@ -105,8 +95,7 @@ const Index = () => {
       />
       
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Configuration Row */}
-        <ConfigurationSection
+        <ConfigurationControls
           location={location}
           buildingType={buildingType}
           populationGroup={populationGroup}
@@ -117,12 +106,8 @@ const Index = () => {
           isLoading={isLoading}
           onRefresh={refreshData}
           environmentalParams={environmentalParams}
+          onParamChange={handleParamChange}
         />
-
-        {/* What Makes Originome Different Button */}
-        <div className="flex justify-center">
-          <WhatMakesOriginomeDifferentModal />
-        </div>
 
         {/* Pattern of the Day Banner - TOP PRIORITY */}
         <PatternOfTheDayBanner
@@ -133,73 +118,25 @@ const Index = () => {
           populationGroup={populationGroup}
         />
 
-        {/* Advanced Pattern Recognition & Risk Analysis */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <CompoundRiskMatrix
-            environmentalParams={environmentalParams}
-            externalData={externalData}
-            cosmicData={cosmicData}
-            buildingType={buildingType}
-          />
-          <RateOfChangeAnalytics
-            environmentalParams={environmentalParams}
-            externalData={externalData}
-          />
-        </div>
-
-        {/* Machine Learning Pattern Recognition */}
-        <PatternRecognitionEngine
+        <PatternRiskAnalysis
           environmentalParams={environmentalParams}
           externalData={externalData}
           cosmicData={cosmicData}
           buildingType={buildingType}
-        />
-
-        {/* Pattern Engine and Absenteeism Risk Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {patternInsight && (
-            <PatternEnginePanel
-              patternInsight={patternInsight}
-              isLoading={isCosmicLoading}
-            />
-          )}
-          {absenteeismData && (
-            <AbsenteeismRiskPanel
-              absenteeismData={absenteeismData}
-              buildingType={buildingType}
-              populationGroup={populationGroup}
-              isLoading={isCosmicLoading}
-            />
-          )}
-        </div>
-
-        {/* Historical Insight Panel */}
-        <HistoricalInsightPanel />
-
-        {/* Cosmic & Environmental Forces Section */}
-        <CosmicConditionsSection
-          cosmicData={cosmicData}
+          populationGroup={populationGroup}
+          patternInsight={patternInsight}
+          absenteeismData={absenteeismData}		
           isCosmicLoading={isCosmicLoading}
         />
 
-        {/* Environmental Controls */}
-        <EnvironmentalControls
-          params={environmentalParams}
-          onParamChange={handleParamChange}
-          externalData={externalData}
-        />
-
-        {/* Analysis and Insights Row */}
-        <AnalysisSection
+        <AnalysisDatabase
           environmentalParams={environmentalParams}
           externalData={externalData}
+          cosmicData={cosmicData}
           buildingType={buildingType}
           populationGroup={populationGroup}
-          getRelevantCitations={() => getRelevantCitations(environmentalParams)}
+          isCosmicLoading={isCosmicLoading}
         />
-
-        {/* Literature Database */}
-        <LiteratureDatabase />
       </div>
     </div>
   );
