@@ -1,12 +1,10 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AssetLearningPanel } from '@/components/AssetLearningPanel';
 import { GeographicMicroAnomalyPanel } from '@/components/GeographicMicroAnomalyPanel';
-import { VulnerabilitySignatureCard } from '@/components/VulnerabilitySignatureCard';
-import { AssetFingerprintCard } from '@/components/AssetFingerprintCard';
 import { Settings, AlertTriangle, CheckCircle, Clock, Wrench } from 'lucide-react';
 import { EnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 import { ExternalData } from '@/hooks/useApiIntegration';
@@ -177,12 +175,6 @@ export const AssetPerformanceTab: React.FC<AssetPerformanceTabProps> = ({
             location={externalData.location.city}
           />
         )}
-      </div>
-
-      {/* Asset Signature Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <VulnerabilitySignatureCard />
-        <AssetFingerprintCard />
       </div>
     </div>
   );
