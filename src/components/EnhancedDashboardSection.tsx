@@ -5,6 +5,7 @@ import { IntelligentAlertSystem } from '@/components/IntelligentAlertSystem';
 import { RealTimeAnalyticsDashboard } from '@/components/RealTimeAnalyticsDashboard';
 import { BusinessDriverVisualization } from '@/components/BusinessDriverVisualization';
 import { CascadePreventionPlaybook } from '@/components/CascadePreventionPlaybook';
+import { TechnicalArchitectureSection } from '@/components/TechnicalArchitectureSection';
 import { ExternalData } from '@/hooks/useApiIntegration';
 import { EnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 import { CosmicData } from '@/hooks/useCosmicData';
@@ -41,7 +42,14 @@ export const EnhancedDashboardSection: React.FC<EnhancedDashboardSectionProps> =
 
   return (
     <>
-      {/* Real-Time Analytics Dashboard - Top Priority */}
+      {/* Technical Architecture Section - New Priority */}
+      <TechnicalArchitectureSection
+        environmentalParams={environmentalParams}
+        externalData={externalData}
+        cosmicData={cosmicData}
+      />
+
+      {/* Real-Time Analytics Dashboard */}
       <RealTimeAnalyticsDashboard
         environmentalParams={environmentalParams}
         externalData={externalData}
