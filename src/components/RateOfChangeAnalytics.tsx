@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { TrendingUp, TrendingDown, Zap, Clock } from 'lucide-react';
+import { TrendingUp, TrendingDown, Zap, Clock, AlertCircle } from 'lucide-react';
 import { ExternalData } from '@/hooks/useApiIntegration';
 import { EnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 
@@ -12,14 +12,23 @@ interface RateOfChangeAnalyticsProps {
   externalData: ExternalData;
 }
 
-interface VelocityIndicator {
+interface AccelerationPattern {
   parameter: string;
-  currentValue: number;
-  velocity: number; // change per minute
-  acceleration: number; // change in velocity
-  trend: 'accelerating' | 'decelerating' | 'stable';
+  velocity: number;
+  acceleration: number;
+  jerk: number; // third derivative
+  suddenChange: boolean;
   riskLevel: 'low' | 'moderate' | 'high' | 'critical';
-  alertType?: 'velocity' | 'acceleration' | 'threshold';
+  alertType: 'velocity' | 'acceleration' | 'jerk' | 'sudden_shift';
+}
+
+interface FirstDerivativeAlert {
+  id: string;
+  parameter: string;
+  derivativeValue: number;
+  alertReason: string;
+  riskWindow: string;
+  criticalityScore: number;
 }
 
 interface DataPoint {
@@ -30,6 +39,11 @@ interface DataPoint {
   humidity: number;
   velocity_co2: number;
   velocity_pm25: number;
+  acceleration_co2: number;
+  acceleration_pm25: number;
+  jerk_co2: number;
+  pressure?: number;
+  electromagnetic?: number;
 }
 
 export const RateOfChangeAnalytics: React.FC<RateOfChangeAnalyticsProps> = ({
@@ -38,8 +52,9 @@ export const RateOfChangeAnalytics: React.FC<RateOfChangeAnalyticsProps> = ({
 }) => {
   const [historicalData, setHistoricalData] = useState<DataPoint[]>([]);
   const [streamingActive, setStreamingActive] = useState(true);
+  const [processingRate, setProcessingRate] = useState(0);
 
-  // Simulate real-time data streaming
+  // Real-time streaming data architecture
   useEffect(() => {
     const interval = setInterval(() => {
       if (!streamingActive) return;
@@ -47,148 +62,233 @@ export const RateOfChangeAnalytics: React.FC<RateOfChangeAnalyticsProps> = ({
       const now = new Date();
       const timestamp = now.toLocaleTimeString();
       
-      // Add some realistic variation
-      const variation = () => (Math.random() - 0.5) * 0.1;
+      // Simulate realistic variations with occasional sudden changes
+      const suddenChangeEvent = Math.random() < 0.05; // 5% chance of sudden change
+      const co2Variation = suddenChangeEvent ? (Math.random() - 0.5) * 200 : (Math.random() - 0.5) * 30;
+      const pm25Variation = suddenChangeEvent ? (Math.random() - 0.5) * 20 : (Math.random() - 0.5) * 3;
       
       const newPoint: DataPoint = {
         timestamp,
-        co2: environmentalParams.co2 + (Math.random() - 0.5) * 50,
-        pm25: Math.max(0, environmentalParams.pm25 + (Math.random() - 0.5) * 5),
-        temperature: environmentalParams.temperature + (Math.random() - 0.5) * 2,
-        humidity: Math.max(0, Math.min(100, environmentalParams.humidity + (Math.random() - 0.5) * 5)),
+        co2: Math.max(300, environmentalParams.co2 + co2Variation),
+        pm25: Math.max(0, environmentalParams.pm25 + pm25Variation),
+        temperature: environmentalParams.temperature + (Math.random() - 0.5) * 1.5,
+        humidity: Math.max(0, Math.min(100, environmentalParams.humidity + (Math.random() - 0.5) * 4)),
+        pressure: externalData.weather?.pressure ? externalData.weather.pressure + (Math.random() - 0.5) * 10 : 1013,
+        electromagnetic: Math.random() * 100 + 50, // Simulated EM field data
         velocity_co2: 0,
-        velocity_pm25: 0
+        velocity_pm25: 0,
+        acceleration_co2: 0,
+        acceleration_pm25: 0,
+        jerk_co2: 0
       };
 
       setHistoricalData(prev => {
         const updated = [...prev, newPoint];
         
-        // Calculate velocities
+        // Calculate first, second, and third derivatives
         if (updated.length >= 2) {
           const current = updated[updated.length - 1];
           const previous = updated[updated.length - 2];
+          
+          // First derivative (velocity)
           current.velocity_co2 = current.co2 - previous.co2;
           current.velocity_pm25 = current.pm25 - previous.pm25;
+          
+          if (updated.length >= 3) {
+            const prevPrevious = updated[updated.length - 3];
+            
+            // Second derivative (acceleration)
+            current.acceleration_co2 = current.velocity_co2 - (previous.co2 - prevPrevious.co2);
+            current.acceleration_pm25 = current.velocity_pm25 - (previous.pm25 - prevPrevious.pm25);
+            
+            if (updated.length >= 4) {
+              const prevPrevPrevious = updated[updated.length - 4];
+              
+              // Third derivative (jerk)
+              const prevAcceleration_co2 = previous.velocity_co2 - (prevPrevious.co2 - prevPrevPrevious.co2);
+              current.jerk_co2 = current.acceleration_co2 - prevAcceleration_co2;
+            }
+          }
         }
         
-        // Keep only last 20 points for visualization
-        return updated.slice(-20);
+        // Update processing rate
+        setProcessingRate(updated.length);
+        
+        // Keep only last 25 points for performance
+        return updated.slice(-25);
       });
-    }, 3000); // Update every 3 seconds
+    }, 2000); // Process every 2 seconds for high-frequency analysis
 
     return () => clearInterval(interval);
-  }, [environmentalParams, streamingActive]);
+  }, [environmentalParams, externalData, streamingActive]);
 
-  const velocityIndicators = useMemo((): VelocityIndicator[] => {
-    if (historicalData.length < 3) return [];
+  // First-derivative risk detection algorithms
+  const accelerationPatterns = useMemo((): AccelerationPattern[] => {
+    if (historicalData.length < 4) return [];
 
-    const indicators: VelocityIndicator[] = [];
+    const patterns: AccelerationPattern[] = [];
     const latest = historicalData[historicalData.length - 1];
     const previous = historicalData[historicalData.length - 2];
-    const beforePrevious = historicalData[historicalData.length - 3];
 
-    // CO2 velocity analysis
-    const co2Velocity = latest.velocity_co2;
-    const co2Acceleration = co2Velocity - (previous.velocity_co2 || 0);
-    
-    indicators.push({
+    // CO2 acceleration analysis
+    const co2SuddenChange = Math.abs(latest.velocity_co2) > 50;
+    patterns.push({
       parameter: 'CO₂ Concentration',
-      currentValue: latest.co2,
-      velocity: co2Velocity,
-      acceleration: co2Acceleration,
-      trend: Math.abs(co2Acceleration) > 2 ? (co2Acceleration > 0 ? 'accelerating' : 'decelerating') : 'stable',
-      riskLevel: Math.abs(co2Velocity) > 15 ? 'high' : Math.abs(co2Velocity) > 8 ? 'moderate' : 'low',
-      alertType: Math.abs(co2Acceleration) > 5 ? 'acceleration' : Math.abs(co2Velocity) > 10 ? 'velocity' : undefined
+      velocity: latest.velocity_co2,
+      acceleration: latest.acceleration_co2,
+      jerk: latest.jerk_co2,
+      suddenChange: co2SuddenChange,
+      riskLevel: co2SuddenChange ? 'critical' : 
+                Math.abs(latest.acceleration_co2) > 10 ? 'high' : 
+                Math.abs(latest.acceleration_co2) > 5 ? 'moderate' : 'low',
+      alertType: co2SuddenChange ? 'sudden_shift' : 
+                Math.abs(latest.jerk_co2) > 8 ? 'jerk' : 
+                Math.abs(latest.acceleration_co2) > 5 ? 'acceleration' : 'velocity'
     });
 
-    // PM2.5 velocity analysis
-    const pm25Velocity = latest.velocity_pm25;
-    const pm25Acceleration = pm25Velocity - (previous.velocity_pm25 || 0);
-    
-    indicators.push({
+    // PM2.5 acceleration analysis
+    const pm25SuddenChange = Math.abs(latest.velocity_pm25) > 8;
+    patterns.push({
       parameter: 'PM2.5 Levels',
-      currentValue: latest.pm25,
-      velocity: pm25Velocity,
-      acceleration: pm25Acceleration,
-      trend: Math.abs(pm25Acceleration) > 0.5 ? (pm25Acceleration > 0 ? 'accelerating' : 'decelerating') : 'stable',
-      riskLevel: Math.abs(pm25Velocity) > 3 ? 'critical' : Math.abs(pm25Velocity) > 1.5 ? 'high' : Math.abs(pm25Velocity) > 0.8 ? 'moderate' : 'low',
-      alertType: Math.abs(pm25Acceleration) > 1 ? 'acceleration' : Math.abs(pm25Velocity) > 2 ? 'velocity' : undefined
+      velocity: latest.velocity_pm25,
+      acceleration: latest.acceleration_pm25,
+      jerk: 0, // Simplified for PM2.5
+      suddenChange: pm25SuddenChange,
+      riskLevel: pm25SuddenChange ? 'critical' : 
+                Math.abs(latest.acceleration_pm25) > 2 ? 'high' : 
+                Math.abs(latest.acceleration_pm25) > 1 ? 'moderate' : 'low',
+      alertType: pm25SuddenChange ? 'sudden_shift' : 
+                Math.abs(latest.acceleration_pm25) > 1.5 ? 'acceleration' : 'velocity'
     });
 
-    return indicators;
+    // Atmospheric pressure jumps
+    if (latest.pressure && previous.pressure) {
+      const pressureVelocity = latest.pressure - previous.pressure;
+      const pressureSuddenChange = Math.abs(pressureVelocity) > 5;
+      patterns.push({
+        parameter: 'Atmospheric Pressure',
+        velocity: pressureVelocity,
+        acceleration: 0, // Simplified
+        jerk: 0,
+        suddenChange: pressureSuddenChange,
+        riskLevel: pressureSuddenChange ? 'high' : 
+                  Math.abs(pressureVelocity) > 3 ? 'moderate' : 'low',
+        alertType: pressureSuddenChange ? 'sudden_shift' : 'velocity'
+      });
+    }
+
+    // Electromagnetic field variations
+    if (latest.electromagnetic && previous.electromagnetic) {
+      const emVelocity = latest.electromagnetic - previous.electromagnetic;
+      const emSuddenChange = Math.abs(emVelocity) > 15;
+      patterns.push({
+        parameter: 'EM Field Intensity',
+        velocity: emVelocity,
+        acceleration: 0,
+        jerk: 0,
+        suddenChange: emSuddenChange,
+        riskLevel: emSuddenChange ? 'high' : 'low',
+        alertType: emSuddenChange ? 'sudden_shift' : 'velocity'
+      });
+    }
+
+    return patterns.filter(p => p.riskLevel !== 'low');
   }, [historicalData]);
 
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'accelerating': return <TrendingUp className="h-4 w-4 text-red-600" />;
-      case 'decelerating': return <TrendingDown className="h-4 w-4 text-green-600" />;
+  // Generate first-derivative alerts
+  const firstDerivativeAlerts = useMemo((): FirstDerivativeAlert[] => {
+    const alerts: FirstDerivativeAlert[] = [];
+
+    accelerationPatterns.forEach((pattern, index) => {
+      if (pattern.riskLevel === 'critical' || pattern.riskLevel === 'high') {
+        alerts.push({
+          id: `alert_${index}`,
+          parameter: pattern.parameter,
+          derivativeValue: pattern.alertType === 'acceleration' ? pattern.acceleration : pattern.velocity,
+          alertReason: pattern.suddenChange ? 
+            `Sudden ${pattern.velocity > 0 ? 'spike' : 'drop'} detected` :
+            `${pattern.alertType} threshold exceeded`,
+          riskWindow: pattern.suddenChange ? '5-15 minutes' : '15-30 minutes',
+          criticalityScore: pattern.riskLevel === 'critical' ? 95 : 75
+        });
+      }
+    });
+
+    return alerts.sort((a, b) => b.criticalityScore - a.criticalityScore);
+  }, [accelerationPatterns]);
+
+  const getRiskColor = (riskLevel: string) => {
+    switch (riskLevel) {
+      case 'critical': return 'text-red-700 bg-red-100 border-red-300';
+      case 'high': return 'text-orange-700 bg-orange-100 border-orange-300';
+      case 'moderate': return 'text-yellow-700 bg-yellow-100 border-yellow-300';
+      default: return 'text-green-700 bg-green-100 border-green-300';
+    }
+  };
+
+  const getAlertIcon = (alertType: string) => {
+    switch (alertType) {
+      case 'sudden_shift': return <AlertCircle className="h-4 w-4 text-red-600" />;
+      case 'jerk': return <Zap className="h-4 w-4 text-purple-600" />;
+      case 'acceleration': return <TrendingUp className="h-4 w-4 text-orange-600" />;
       default: return <Clock className="h-4 w-4 text-blue-600" />;
     }
   };
 
-  const getRiskColor = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'critical': return 'text-red-700 bg-red-100 border-red-200';
-      case 'high': return 'text-orange-700 bg-orange-100 border-orange-200';
-      case 'moderate': return 'text-yellow-700 bg-yellow-100 border-yellow-200';
-      default: return 'text-green-700 bg-green-100 border-green-200';
-    }
-  };
-
-  const activeAlerts = velocityIndicators.filter(indicator => indicator.alertType);
-
   return (
     <div className="space-y-6">
-      {/* Streaming Status */}
-      <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
-        <CardHeader className="pb-3">
+      {/* Real-time Processing Header */}
+      <Card className="bg-gradient-to-r from-cyan-50 to-blue-50 border-cyan-200">
+        <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-blue-600" />
-            Rate-of-Change Analytics
+            <Zap className="h-5 w-5 text-cyan-600" />
+            Real-Time Derivative Analytics Engine
             <Badge variant={streamingActive ? "default" : "secondary"} className="text-xs">
-              {streamingActive ? "LIVE STREAMING" : "PAUSED"}
+              {streamingActive ? "STREAMING" : "PAUSED"}
             </Badge>
           </CardTitle>
-          <div className="text-sm text-blue-600">
-            Velocity-based risk detection • Processing {historicalData.length} data points
+          <div className="text-sm text-cyan-600">
+            First-derivative risk detection processing {processingRate} data points • 2-second intervals
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-xs text-blue-700">
-            Real-time environmental intelligence detecting acceleration patterns and velocity thresholds
+          <div className="text-xs text-cyan-700">
+            Immediate response architecture: Velocity → Acceleration → Jerk analysis in real-time
           </div>
         </CardContent>
       </Card>
 
-      {/* Active Velocity Alerts */}
-      {activeAlerts.length > 0 && (
+      {/* First-Derivative Alerts */}
+      {firstDerivativeAlerts.length > 0 && (
         <Card className="border-orange-200 bg-orange-50">
-          <CardHeader className="pb-3">
+          <CardHeader>
             <CardTitle className="text-orange-800 flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Active Velocity Alerts
+              Active Derivative-Based Alerts
             </CardTitle>
+            <div className="text-sm text-orange-600">
+              Velocity-based triggers detecting acceleration patterns
+            </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {activeAlerts.map((indicator, index) => (
-              <Alert key={index} className="border-l-4 border-orange-400">
+            {firstDerivativeAlerts.map((alert) => (
+              <Alert key={alert.id} className="border-l-4 border-orange-400">
                 <AlertDescription>
                   <div className="flex items-center justify-between mb-2">
-                    <div className="font-semibold text-orange-800">{indicator.parameter}</div>
+                    <div className="font-semibold text-orange-800">{alert.parameter}</div>
                     <div className="flex items-center gap-2">
-                      {getTrendIcon(indicator.trend)}
-                      <Badge variant="outline" className="text-xs">
-                        {indicator.alertType?.toUpperCase()}
+                      {getAlertIcon('acceleration')}
+                      <Badge variant="destructive" className="text-xs">
+                        Critical: {alert.criticalityScore}
                       </Badge>
                     </div>
                   </div>
-                  <div className="text-sm text-orange-700">
-                    <strong>Rate of Change:</strong> {indicator.velocity.toFixed(2)} units/min
-                    {indicator.acceleration !== 0 && (
-                      <span className="ml-2">
-                        <strong>Acceleration:</strong> {indicator.acceleration.toFixed(2)} units/min²
-                      </span>
-                    )}
+                  <div className="text-sm text-orange-700 mb-2">
+                    <strong>Alert Reason:</strong> {alert.alertReason} • 
+                    <strong> Derivative Value:</strong> {alert.derivativeValue.toFixed(2)}
+                  </div>
+                  <div className="text-xs text-orange-800 bg-white/60 p-2 rounded">
+                    <strong>Risk Window:</strong> {alert.riskWindow} • Pattern detected through first-derivative analysis
                   </div>
                 </AlertDescription>
               </Alert>
@@ -197,31 +297,40 @@ export const RateOfChangeAnalytics: React.FC<RateOfChangeAnalyticsProps> = ({
         </Card>
       )}
 
-      {/* Velocity Dashboard */}
+      {/* Acceleration Pattern Dashboard */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {velocityIndicators.map((indicator, index) => (
-          <Card key={index} className={`border ${getRiskColor(indicator.riskLevel)}`}>
+        {accelerationPatterns.map((pattern, index) => (
+          <Card key={index} className={`border ${getRiskColor(pattern.riskLevel)}`}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
-                <div className="font-medium text-sm">{indicator.parameter}</div>
-                {getTrendIcon(indicator.trend)}
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <div className="text-xs text-gray-600">Current Value</div>
-                  <div className="font-bold">{indicator.currentValue.toFixed(1)}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-600">Velocity</div>
-                  <div className="font-bold">{indicator.velocity.toFixed(2)}/min</div>
+                <div className="font-medium text-sm">{pattern.parameter}</div>
+                <div className="flex items-center gap-1">
+                  {getAlertIcon(pattern.alertType)}
+                  {pattern.suddenChange && <AlertCircle className="h-3 w-3 text-red-600" />}
                 </div>
               </div>
               
-              {Math.abs(indicator.acceleration) > 0.1 && (
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <div className="text-gray-600">Velocity (1st)</div>
+                  <div className="font-bold">{pattern.velocity.toFixed(2)}/min</div>
+                </div>
+                <div>
+                  <div className="text-gray-600">Acceleration (2nd)</div>
+                  <div className="font-bold">{pattern.acceleration.toFixed(2)}/min²</div>
+                </div>
+              </div>
+              
+              {pattern.jerk !== 0 && (
                 <div className="mt-2 text-xs">
-                  <span className="text-gray-600">Acceleration: </span>
-                  <span className="font-medium">{indicator.acceleration.toFixed(2)}/min²</span>
+                  <span className="text-gray-600">Jerk (3rd): </span>
+                  <span className="font-medium">{pattern.jerk.toFixed(2)}/min³</span>
+                </div>
+              )}
+              
+              {pattern.suddenChange && (
+                <div className="mt-2 text-xs bg-red-100 p-1 rounded text-red-800">
+                  ⚠️ Sudden change pattern detected
                 </div>
               )}
             </CardContent>
@@ -229,15 +338,18 @@ export const RateOfChangeAnalytics: React.FC<RateOfChangeAnalyticsProps> = ({
         ))}
       </div>
 
-      {/* Real-time Charts */}
-      {historicalData.length > 5 && (
+      {/* Real-time Derivative Visualization */}
+      {historicalData.length > 8 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Environmental Velocity Trends</CardTitle>
+            <CardTitle className="text-sm">Velocity & Acceleration Streams</CardTitle>
+            <div className="text-xs text-gray-600">
+              Real-time first and second derivative monitoring
+            </div>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={historicalData}>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={historicalData.slice(-15)}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="timestamp" className="text-xs" />
                 <YAxis className="text-xs" />
@@ -251,9 +363,16 @@ export const RateOfChangeAnalytics: React.FC<RateOfChangeAnalyticsProps> = ({
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="velocity_pm25" 
+                  dataKey="acceleration_co2" 
                   stroke="#ef4444" 
                   strokeWidth={2}
+                  name="CO₂ Acceleration"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="velocity_pm25" 
+                  stroke="#10b981" 
+                  strokeWidth={1}
                   name="PM2.5 Velocity"
                 />
                 <ReferenceLine y={0} stroke="#666" strokeDasharray="2 2" />
@@ -262,6 +381,22 @@ export const RateOfChangeAnalytics: React.FC<RateOfChangeAnalyticsProps> = ({
           </CardContent>
         </Card>
       )}
+
+      {/* Processing Status */}
+      <Card className="bg-gray-50 border-gray-200">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
+            <div className="text-sm text-gray-700">
+              <strong>Derivative Engine Status:</strong> Processing {accelerationPatterns.length} acceleration patterns • 
+              {firstDerivativeAlerts.length} active alerts
+            </div>
+          </div>
+          <div className="text-xs text-gray-600 mt-1">
+            High-frequency analysis: 2-second intervals • Next derivative calculation: ~2 seconds
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
