@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Building, Users, MapPin, Share, Download } from 'lucide-react';
 import { OriginomeHeader } from '@/components/OriginomeHeader';
-import { ExecutiveDashboard } from '@/components/ExecutiveDashboard';
+import { IntelligentAlertSystem } from '@/components/IntelligentAlertSystem';
+import { CompoundRiskMatrix } from '@/components/CompoundRiskMatrix';
+import { RateOfChangeAnalytics } from '@/components/RateOfChangeAnalytics';
 import { PatternIntelligenceTab } from '@/components/PatternIntelligenceTab';
 import { AssetPerformanceTab } from '@/components/AssetPerformanceTab';
 import { AnalyticsTrendsTab } from '@/components/AnalyticsTrendsTab';
@@ -135,10 +137,10 @@ const Index = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="overview" className="text-sm font-medium">
-              Environmental Overview
+              Pattern Intelligence
             </TabsTrigger>
             <TabsTrigger value="patterns" className="text-sm font-medium">
-              Pattern Intelligence
+              Compound Risk Matrix
             </TabsTrigger>
             <TabsTrigger value="assets" className="text-sm font-medium">
               Asset Performance
@@ -149,16 +151,6 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <ExecutiveDashboard
-              environmentalParams={environmentalParams}
-              externalData={externalData}
-              cosmicData={cosmicData}
-              buildingType={buildingType}
-              populationGroup={populationGroup}
-            />
-          </TabsContent>
-
-          <TabsContent value="patterns" className="space-y-6">
             <PatternIntelligenceTab
               environmentalParams={environmentalParams}
               externalData={externalData}
@@ -174,6 +166,28 @@ const Index = () => {
               isLoading={isLoading}
               location={location}
             />
+          </TabsContent>
+
+          <TabsContent value="patterns" className="space-y-6">
+            <IntelligentAlertSystem
+              environmentalParams={environmentalParams}
+              externalData={externalData}
+              cosmicData={cosmicData}
+              buildingType={buildingType}
+            />
+            
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <CompoundRiskMatrix
+                environmentalParams={environmentalParams}
+                externalData={externalData}
+                cosmicData={cosmicData}
+                buildingType={buildingType}
+              />
+              <RateOfChangeAnalytics
+                environmentalParams={environmentalParams}
+                externalData={externalData}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="assets" className="space-y-6">
