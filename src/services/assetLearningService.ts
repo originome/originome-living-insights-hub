@@ -1,4 +1,3 @@
-
 export interface AssetFingerprint {
   assetId: string;
   buildingType: string;
@@ -168,7 +167,7 @@ export class AssetLearningService {
     };
   }
 
-  private static calculateR asset, conditions: any): number {
+  private static calculateRiskScore(asset: AssetFingerprint, conditions: any): number {
     let riskScore = 0;
     
     // Temperature risk
