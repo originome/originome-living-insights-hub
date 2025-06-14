@@ -1,136 +1,107 @@
 
-import React, { useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { MicroAnomalyData } from '@/services/satelliteDataService';
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { MapPin, AlertTriangle } from 'lucide-react';
 
-// IMPORTANT: You need to add your Mapbox public token here for the map to work.
-// You can get a free token from https://www.mapbox.com/
-// For production, it's recommended to store this in a secure way, like Supabase secrets.
-mapboxgl.accessToken = 'YOUR_MAPBOX_PUBLIC_TOKEN';
+interface Anomaly {
+  anomalyType: string;
+  severity: string;
+  riskScore: number;
+  affectedRadius: number;
+  confidence: number;
+}
 
 interface InteractiveMapProps {
   latitude: number;
   longitude: number;
-  anomalies: MicroAnomalyData[];
+  anomalies: Anomaly[];
 }
 
-const InteractiveMap: React.FC<InteractiveMapProps> = ({ latitude, longitude, anomalies }) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
+const InteractiveMap: React.FC<InteractiveMapProps> = ({
+  latitude,
+  longitude,
+  anomalies
+}) => {
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return 'bg-red-500';
+      case 'high': return 'bg-orange-500';
+      case 'moderate': return 'bg-yellow-500';
+      default: return 'bg-blue-500';
+    }
+  };
 
-  useEffect(() => {
-    if (map.current || !mapContainer.current || !mapboxgl.accessToken || mapboxgl.accessToken === 'YOUR_MAPBOX_PUBLIC_TOKEN') return;
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
-      center: [longitude, latitude],
-      zoom: 12,
-      pitch: 45,
-    });
-    
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-    map.current.on('load', () => {
-      if (!map.current) return;
-      
-      anomalies.forEach((anomaly, index) => {
-        if (!map.current) return;
-        // Since anomaly data doesn't contain coordinates, we add a random offset to the main location for visualization purposes.
-        const anomalyLng = longitude + (Math.random() - 0.5) * 0.05;
-        const anomalyLat = latitude + (Math.random() - 0.5) * 0.05;
-
-        const sourceId = `anomaly-source-${index}`;
-        map.current.addSource(sourceId, {
-          'type': 'geojson',
-          'data': {
-            'type': 'FeatureCollection',
-            'features': [{
-              'type': 'Feature',
-              'geometry': { 'type': 'Point', 'coordinates': [anomalyLng, anomalyLat] },
-              'properties': {}
-            }]
-          }
-        });
-        
-        let color = '#3b82f6';
-        switch (anomaly.severity) {
-            case 'critical': color = '#ef4444'; break;
-            case 'high': color = '#f97316'; break;
-            case 'moderate': color = '#eab308'; break;
-        }
-
-        const layerId = `anomaly-layer-${index}`;
-        map.current.addLayer({
-          'id': layerId,
-          'type': 'circle',
-          'source': sourceId,
-          'paint': {
-            'circle-radius': anomaly.affectedRadius / 25,
-            'circle-color': color,
-            'circle-opacity': 0.6,
-            'circle-stroke-width': 1,
-            'circle-stroke-color': '#ffffff'
-          }
-        });
-
-        map.current.on('click', layerId, (e) => {
-          if(!e.features || e.features.length === 0 || !map.current) return;
-          const coordinates = (e.features[0].geometry as any).coordinates.slice();
-          const description = `
-            <div class="p-2 bg-gray-800 text-white rounded-lg shadow-lg max-w-xs" style="font-family: sans-serif;">
-              <h3 class="font-bold text-md capitalize">${anomaly.anomalyType} Anomaly</h3>
-              <p><strong>Severity:</strong> <span style="color:${color}; text-transform: capitalize; font-weight: bold;">${anomaly.severity}</span></p>
-              <p><strong>Risk Score:</strong> ${anomaly.riskScore.toFixed(0)}</p>
-              <p><strong>Affected Radius:</strong> ${anomaly.affectedRadius}m</p>
-            </div>
-          `;
-          
-          new mapboxgl.Popup({ closeButton: false, className: 'mapbox-popup-custom' })
-            .setLngLat(coordinates)
-            .setHTML(description)
-            .addTo(map.current);
-        });
-
-        map.current.on('mouseenter', layerId, () => {
-          if(map.current) map.current.getCanvas().style.cursor = 'pointer';
-        });
-        map.current.on('mouseleave', layerId, () => {
-          if(map.current) map.current.getCanvas().style.cursor = '';
-        });
-      });
-    });
-
-    return () => {
-      map.current?.remove();
-      map.current = null;
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [latitude, longitude]); // We only want to re-initialize the map if lat/lon changes. Anomalies are added dynamically.
-
-  useEffect(() => {
-    if (!map.current?.isStyleLoaded()) return;
-
-    // This effect handles dynamic updates of anomalies without re-initializing the map
-    // For now, we add them on load, but this structure allows for future real-time updates.
-
-  }, [anomalies]);
-
-
-  if (!mapboxgl.accessToken || mapboxgl.accessToken === 'YOUR_MAPBOX_PUBLIC_TOKEN') {
-    return (
-       <div className="h-96 w-full rounded-lg shadow-lg bg-gray-800 flex items-center justify-center">
-        <div className="text-center text-white p-4">
-          <h3 className="text-lg font-semibold">Mapbox Token Required</h3>
-          <p className="text-sm">Please add your Mapbox public access token in <br/><code className="bg-gray-700 p-1 rounded">src/components/InteractiveMap.tsx</code> to display the map.</p>
-          <a href="https://mapbox.com" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline mt-2 inline-block">Get your free token</a>
+  return (
+    <div className="relative w-full h-64 bg-gradient-to-br from-blue-100 to-green-100 rounded-lg border overflow-hidden">
+      {/* Map Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-200 via-blue-50 to-green-50">
+        <div className="grid grid-cols-6 grid-rows-4 h-full opacity-10">
+          {Array.from({ length: 24 }, (_, i) => (
+            <div key={i} className="border border-gray-300"></div>
+          ))}
         </div>
       </div>
-    )
-  }
 
-  return <div ref={mapContainer} className="h-96 w-full rounded-lg shadow-lg bg-gray-800" />;
+      {/* Location Pin */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        <MapPin className="h-8 w-8 text-blue-600 drop-shadow-lg" />
+        <div className="absolute -bottom-6 -left-8 bg-white px-2 py-1 rounded shadow text-xs font-medium">
+          Your Location
+        </div>
+      </div>
+
+      {/* Anomaly Hotspots */}
+      {anomalies.map((anomaly, index) => {
+        const offsetX = (index % 3 - 1) * 60 + Math.random() * 20 - 10;
+        const offsetY = (Math.floor(index / 3) - 1) * 40 + Math.random() * 20 - 10;
+        
+        return (
+          <div
+            key={index}
+            className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
+            style={{
+              left: `calc(50% + ${offsetX}px)`,
+              top: `calc(50% + ${offsetY}px)`
+            }}
+          >
+            <div className={`w-4 h-4 rounded-full ${getSeverityColor(anomaly.severity)} animate-pulse`}>
+              <div className={`w-8 h-8 rounded-full ${getSeverityColor(anomaly.severity)} opacity-30 absolute -top-2 -left-2 animate-ping`}></div>
+            </div>
+            
+            {/* Tooltip */}
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+              {anomaly.anomalyType} - {anomaly.confidence}% confidence
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Legend */}
+      <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur rounded p-2 text-xs">
+        <div className="font-medium mb-1">Risk Levels</div>
+        <div className="flex gap-2">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+            <span>Critical</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+            <span>High</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+            <span>Moderate</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Coordinates Display */}
+      <div className="absolute top-2 right-2 bg-white/90 backdrop-blur rounded px-2 py-1 text-xs font-mono">
+        {latitude.toFixed(4)}°, {longitude.toFixed(4)}°
+      </div>
+    </div>
+  );
 };
 
 export default InteractiveMap;

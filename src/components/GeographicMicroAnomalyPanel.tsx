@@ -47,6 +47,10 @@ export const GeographicMicroAnomalyPanel: React.FC<GeographicMicroAnomalyPanelPr
 
     if (latitude && longitude) {
       fetchSatelliteData();
+      
+      // Refresh data every 5 minutes for demo
+      const interval = setInterval(fetchSatelliteData, 5 * 60 * 1000);
+      return () => clearInterval(interval);
     }
   }, [latitude, longitude]);
 
@@ -122,7 +126,7 @@ export const GeographicMicroAnomalyPanel: React.FC<GeographicMicroAnomalyPanelPr
                 <div className="text-xs text-blue-500">Land Surface</div>
               </div>
               <div className="text-center">
-                <div className="font-bol text-lg text-blue-700">
+                <div className="font-bold text-lg text-blue-700">
                   {satelliteData.aerosolOpticalDepth.toFixed(3)}
                 </div>
                 <div className="text-blue-600">AOD</div>
@@ -199,19 +203,19 @@ export const GeographicMicroAnomalyPanel: React.FC<GeographicMicroAnomalyPanelPr
         </Card>
       )}
 
-      {/* Interactive Mapping Placeholder */}
+      {/* Interactive Mapping */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-gray-600" />
             Interactive Environmental Hot-Spot Map
           </CardTitle>
-           <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600">
             Hyperlocal environmental anomalies visualized. Click circles for details.
           </div>
         </CardHeader>
         <CardContent>
-           <InteractiveMap
+          <InteractiveMap
             latitude={latitude}
             longitude={longitude}
             anomalies={microAnomalies}

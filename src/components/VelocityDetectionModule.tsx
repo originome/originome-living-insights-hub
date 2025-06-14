@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { TrendingUp, TrendingDown, Zap, Activity } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TrendingUp, TrendingDown, Zap, Activity, Play, Pause } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 interface VelocityData {
@@ -38,6 +39,7 @@ export const VelocityDetectionModule: React.FC<VelocityDetectionModuleProps> = (
   const [velocityData, setVelocityData] = useState<VelocityData[]>([]);
   const [velocityAlerts, setVelocityAlerts] = useState<VelocityAlert[]>([]);
   const [isMonitoring, setIsMonitoring] = useState(true);
+  const [processingRate, setProcessingRate] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -48,6 +50,9 @@ export const VelocityDetectionModule: React.FC<VelocityDetectionModuleProps> = (
         // Check for velocity alerts
         const alerts = detectVelocityAlerts(newDataPoint);
         setVelocityAlerts(alerts);
+        
+        // Update processing rate
+        setProcessingRate(prev => prev + 1);
       }
     }, 2000); // Update every 2 seconds for high-frequency analysis
 
@@ -153,15 +158,44 @@ export const VelocityDetectionModule: React.FC<VelocityDetectionModuleProps> = (
     <div className="space-y-4">
       <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-6 w-6 text-purple-600" />
-            Environmental Velocity Detection
-          </CardTitle>
-          <div className="text-sm text-purple-600">
-            Rate-of-change monitoring • First-derivative risk detection
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-6 w-6 text-purple-600" />
+                Environmental Velocity Detection
+              </CardTitle>
+              <div className="text-sm text-purple-600">
+                Rate-of-change monitoring • First-derivative risk detection
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge variant={isMonitoring ? "default" : "secondary"} className="text-xs">
+                {isMonitoring ? "ACTIVE" : "PAUSED"}
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsMonitoring(!isMonitoring)}
+                className="text-xs"
+              >
+                {isMonitoring ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
+          {/* Processing Status */}
+          <div className="mb-4 p-3 bg-white/60 rounded-lg">
+            <div className="flex items-center justify-between text-sm">
+              <div className="text-purple-700">
+                <strong>Processing Rate:</strong> {processingRate} data points analyzed
+              </div>
+              <div className="text-purple-600">
+                <strong>Frequency:</strong> Every 2 seconds
+              </div>
+            </div>
+          </div>
+
           {/* Current Velocity Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {velocityData.length > 0 && (
@@ -223,6 +257,9 @@ export const VelocityDetectionModule: React.FC<VelocityDetectionModuleProps> = (
                   </LineChart>
                 </ResponsiveContainer>
               </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Red lines indicate velocity alert thresholds (±15 ppm/min)
+              </div>
             </div>
           )}
         </CardContent>
@@ -236,6 +273,9 @@ export const VelocityDetectionModule: React.FC<VelocityDetectionModuleProps> = (
               <Zap className="h-5 w-5 text-orange-600" />
               Active Velocity Alerts
             </CardTitle>
+            <div className="text-sm text-orange-600">
+              {velocityAlerts.length} velocity threshold violations detected
+            </div>
           </CardHeader>
           <CardContent className="space-y-3">
             {velocityAlerts.map((alert, index) => (
@@ -245,13 +285,18 @@ export const VelocityDetectionModule: React.FC<VelocityDetectionModuleProps> = (
                     <div className="font-semibold">
                       {alert.parameter} Velocity Alert
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {alert.currentVelocity > 0 ? '+' : ''}{alert.currentVelocity.toFixed(1)}/min
-                    </Badge>
+                    <div className="flex gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {alert.currentVelocity > 0 ? '+' : ''}{alert.currentVelocity.toFixed(1)}/min
+                      </Badge>
+                      <Badge variant="destructive" className="text-xs">
+                        {alert.severity.toUpperCase()}
+                      </Badge>
+                    </div>
                   </div>
                   <div className="text-sm text-gray-700 mb-2">{alert.prediction}</div>
                   <div className="text-xs text-gray-600">
-                    <strong>Time to Impact:</strong> {alert.timeToImpact} minutes
+                    <strong>Time to Impact:</strong> {alert.timeToImpact} minutes • <strong>Threshold:</strong> ±{alert.threshold}/min
                   </div>
                 </AlertDescription>
               </Alert>

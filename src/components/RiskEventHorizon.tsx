@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, AlertTriangle, CheckCircle, Clock, Info, Eye } from 'lucide-react';
+import { DataLineageModal } from './DataLineageModal';
 
 interface RiskEvent {
   id: string;
@@ -40,6 +41,17 @@ export const RiskEventHorizon: React.FC<RiskEventHorizonProps> = ({
   const [riskEvents, setRiskEvents] = useState<RiskEvent[]>([]);
   const [monitoringActive, setMonitoringActive] = useState(true);
   const [lastScan, setLastScan] = useState(new Date());
+  const [dataLineageModal, setDataLineageModal] = useState<{
+    isOpen: boolean;
+    eventId: string;
+    publicSources: string[];
+    privateSources: string[];
+  }>({
+    isOpen: false,
+    eventId: '',
+    publicSources: [],
+    privateSources: []
+  });
 
   useEffect(() => {
     // Perpetual monitoring - scan every 30 seconds
@@ -117,6 +129,15 @@ export const RiskEventHorizon: React.FC<RiskEventHorizonProps> = ({
     );
   };
 
+  const openDataLineage = (event: RiskEvent) => {
+    setDataLineageModal({
+      isOpen: true,
+      eventId: event.id,
+      publicSources: event.dataLineage.publicSources,
+      privateSources: event.dataLineage.privateSources
+    });
+  };
+
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case 'critical': return <AlertTriangle className="h-5 w-5 text-red-600" />;
@@ -136,107 +157,117 @@ export const RiskEventHorizon: React.FC<RiskEventHorizonProps> = ({
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-blue-600" />
-            Risk Event Horizon
-          </CardTitle>
-          <div className="flex items-center gap-3">
-            <Badge variant={monitoringActive ? "default" : "secondary"}>
-              {monitoringActive ? "Monitoring Active" : "Monitoring Paused"}
-            </Badge>
-            <div className="text-xs text-gray-600">
-              Last scan: {lastScan.toLocaleTimeString()}
+    <>
+      <Card className="w-full">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-6 w-6 text-blue-600" />
+              Risk Event Horizon
+            </CardTitle>
+            <div className="flex items-center gap-3">
+              <Badge variant={monitoringActive ? "default" : "secondary"}>
+                {monitoringActive ? "Monitoring Active" : "Monitoring Paused"}
+              </Badge>
+              <div className="text-xs text-gray-600">
+                Last scan: {lastScan.toLocaleTimeString()}
+              </div>
             </div>
           </div>
-        </div>
-        <div className="text-sm text-gray-600">
-          Perpetual environmental risk detection • Event-driven intelligence
-        </div>
-      </CardHeader>
-      <CardContent>
-        {riskEvents.length === 0 ? (
-          <div className="text-center py-12">
-            <CheckCircle className="h-16 w-16 mx-auto mb-4 text-green-500" />
-            <h3 className="text-lg font-semibold text-green-800 mb-2">
-              No Material Risk Events Detected
-            </h3>
-            <p className="text-sm text-green-600">
-              Originome is continuously monitoring your environment. You'll be notified immediately when risk patterns emerge.
-            </p>
+          <div className="text-sm text-gray-600">
+            Perpetual environmental risk detection • Event-driven intelligence
           </div>
-        ) : (
-          <div className="space-y-4">
-            {riskEvents.map((event) => (
-              <Alert key={event.id} className={`border-l-4 ${getSeverityColor(event.severity)}`}>
-                <div className="flex items-start gap-3">
-                  {getSeverityIcon(event.severity)}
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-semibold text-gray-900">{event.title}</div>
-                      <div className="flex gap-2">
-                        <Badge variant="outline" className="text-xs">
-                          {event.riskMultiplier}× risk
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {event.confidence}% confidence
-                        </Badge>
-                      </div>
-                    </div>
-                    
-                    <AlertDescription className="space-y-3">
-                      <p className="text-sm text-gray-700">{event.description}</p>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-500">
-                          {event.timestamp.toLocaleString()}
-                        </div>
+        </CardHeader>
+        <CardContent>
+          {riskEvents.length === 0 ? (
+            <div className="text-center py-12">
+              <CheckCircle className="h-16 w-16 mx-auto mb-4 text-green-500" />
+              <h3 className="text-lg font-semibold text-green-800 mb-2">
+                No Material Risk Events Detected
+              </h3>
+              <p className="text-sm text-green-600">
+                Originome is continuously monitoring your environment. You'll be notified immediately when risk patterns emerge.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {riskEvents.map((event) => (
+                <Alert key={event.id} className={`border-l-4 ${getSeverityColor(event.severity)}`}>
+                  <div className="flex items-start gap-3">
+                    {getSeverityIcon(event.severity)}
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-semibold text-gray-900">{event.title}</div>
                         <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {}}
-                            className="text-xs"
-                          >
-                            <Eye className="h-3 w-3 mr-1" />
-                            Data Lineage
-                          </Button>
-                          {event.status === 'active' && (
+                          <Badge variant="outline" className="text-xs">
+                            {event.riskMultiplier}× risk
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {event.confidence}% confidence
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <AlertDescription className="space-y-3">
+                        <p className="text-sm text-gray-700">{event.description}</p>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs text-gray-500">
+                            {event.timestamp.toLocaleString()}
+                          </div>
+                          <div className="flex gap-2">
                             <Button
+                              variant="outline"
                               size="sm"
-                              onClick={() => acknowledgeEvent(event.id)}
+                              onClick={() => openDataLineage(event)}
                               className="text-xs"
                             >
-                              Acknowledge
+                              <Eye className="h-3 w-3 mr-1" />
+                              Data Lineage
                             </Button>
-                          )}
+                            {event.status === 'active' && (
+                              <Button
+                                size="sm"
+                                onClick={() => acknowledgeEvent(event.id)}
+                                className="text-xs"
+                              >
+                                Acknowledge
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </AlertDescription>
+                      </AlertDescription>
+                    </div>
                   </div>
-                </div>
-              </Alert>
-            ))}
-          </div>
-        )}
-
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
-          <div className="flex items-center justify-between text-sm">
-            <div className="text-gray-700">
-              <strong>Monitoring Status:</strong> {riskEvents.filter(e => e.status === 'active').length} active events • Next scan in 30 seconds
+                </Alert>
+              ))}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setMonitoringActive(!monitoringActive)}
-            >
-              {monitoringActive ? 'Pause' : 'Resume'} Monitoring
-            </Button>
+          )}
+
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
+            <div className="flex items-center justify-between text-sm">
+              <div className="text-gray-700">
+                <strong>Monitoring Status:</strong> {riskEvents.filter(e => e.status === 'active').length} active events • Next scan in 30 seconds
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMonitoringActive(!monitoringActive)}
+              >
+                {monitoringActive ? 'Pause' : 'Resume'} Monitoring
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <DataLineageModal
+        isOpen={dataLineageModal.isOpen}
+        onClose={() => setDataLineageModal(prev => ({ ...prev, isOpen: false }))}
+        riskEventId={dataLineageModal.eventId}
+        publicSources={dataLineageModal.publicSources}
+        privateSources={dataLineageModal.privateSources}
+      />
+    </>
   );
 };
