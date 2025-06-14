@@ -5,6 +5,7 @@ import { RateOfChangeAnalytics } from '@/components/RateOfChangeAnalytics';
 import { PatternRecognitionEngine } from '@/components/PatternRecognitionEngine';
 import { PatternEnginePanel } from '@/components/PatternEnginePanel';
 import { AbsenteeismRiskPanel } from '@/components/AbsenteeismRiskPanel';
+import { EnhancedDashboardSection } from '@/components/EnhancedDashboardSection';
 import { ExternalData } from '@/hooks/useApiIntegration';
 import { EnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 import { CosmicData } from '@/hooks/useCosmicData';
@@ -32,6 +33,15 @@ export const PatternRiskAnalysis: React.FC<PatternRiskAnalysisProps> = ({
 }) => {
   return (
     <>
+      {/* Enhanced Dashboard Section - New Priority Section */}
+      <EnhancedDashboardSection
+        environmentalParams={environmentalParams}
+        externalData={externalData}
+        cosmicData={cosmicData}
+        buildingType={buildingType}
+        populationGroup={populationGroup}
+      />
+
       {/* Advanced Pattern Recognition & Risk Analysis */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <CompoundRiskMatrix
