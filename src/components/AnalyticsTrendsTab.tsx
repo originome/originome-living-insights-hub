@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AnalysisDatabase } from '@/components/AnalysisDatabase';
 import { CrossDomainCorrelationPanel } from '@/components/CrossDomainCorrelationPanel';
 import { HistoricalInsightPanel } from '@/components/HistoricalInsightPanel';
 import { LiteratureDatabase } from '@/components/LiteratureDatabase';
@@ -74,16 +73,6 @@ export const AnalyticsTrendsTab: React.FC<AnalyticsTrendsTabProps> = ({
         currentSector={buildingType}
         environmentalData={environmentalParams}
         buildingType={buildingType}
-      />
-
-      {/* Comprehensive Analysis Database */}
-      <AnalysisDatabase
-        environmentalParams={environmentalParams}
-        externalData={externalData}
-        cosmicData={cosmicData}
-        buildingType={buildingType}
-        populationGroup={populationGroup}
-        isCosmicLoading={isCosmicLoading}
       />
 
       {/* Scientific Literature Integration */}

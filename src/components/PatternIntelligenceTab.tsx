@@ -2,7 +2,7 @@
 import React from 'react';
 import { ConfigurationControls } from '@/components/ConfigurationControls';
 import { PatternOfTheDayBanner } from '@/components/PatternOfTheDayBanner';
-import { PatternRiskAnalysis } from '@/components/PatternRiskAnalysis';
+import { IntelligentAlertSystem } from '@/components/IntelligentAlertSystem';
 import { PatternEngineService } from '@/services/patternEngineService';
 import { EnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 import { ExternalData } from '@/hooks/useApiIntegration';
@@ -39,17 +39,8 @@ export const PatternIntelligenceTab: React.FC<PatternIntelligenceTabProps> = ({
   onRefresh,
   isLoading
 }) => {
-  // Generate pattern insights and absenteeism data
-  const patternInsight = cosmicData ? 
-    PatternEngineService.generatePatternOfTheDay(environmentalParams, externalData, cosmicData, buildingType) :
-    null;
-
-  const absenteeismData = cosmicData ?
-    PatternEngineService.calculateAbsenteeismRisk(environmentalParams, externalData, cosmicData, buildingType) :
-    null;
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Configuration Controls */}
       <ConfigurationControls
         location={location}
@@ -65,7 +56,7 @@ export const PatternIntelligenceTab: React.FC<PatternIntelligenceTabProps> = ({
         onParamChange={onParamChange}
       />
 
-      {/* Pattern of the Day Banner */}
+      {/* Pattern of the Day - Main Insight */}
       <PatternOfTheDayBanner
         environmentalParams={environmentalParams}
         externalData={externalData}
@@ -74,16 +65,12 @@ export const PatternIntelligenceTab: React.FC<PatternIntelligenceTabProps> = ({
         populationGroup={populationGroup}
       />
 
-      {/* Advanced Pattern Risk Analysis */}
-      <PatternRiskAnalysis
+      {/* Intelligent Alert System - Compound Risk Detection */}
+      <IntelligentAlertSystem
         environmentalParams={environmentalParams}
         externalData={externalData}
         cosmicData={cosmicData}
         buildingType={buildingType}
-        populationGroup={populationGroup}
-        patternInsight={patternInsight}
-        absenteeismData={absenteeismData}
-        isCosmicLoading={isCosmicLoading}
       />
     </div>
   );

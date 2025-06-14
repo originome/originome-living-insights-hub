@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AssetLearningPanel } from '@/components/AssetLearningPanel';
-import { GeographicMicroAnomalyPanel } from '@/components/GeographicMicroAnomalyPanel';
-import { Settings, AlertTriangle, CheckCircle, Clock, Wrench } from 'lucide-react';
+import { Settings, AlertTriangle, CheckCircle, Wrench } from 'lucide-react';
 import { EnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 import { ExternalData } from '@/hooks/useApiIntegration';
 import { CosmicData } from '@/hooks/useCosmicData';
@@ -158,24 +157,14 @@ export const AssetPerformanceTab: React.FC<AssetPerformanceTabProps> = ({
         </CardContent>
       </Card>
 
-      {/* Asset-Specific Intelligence Panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {externalData.location && (
-          <AssetLearningPanel
-            buildingType={buildingType}
-            location={{ lat: externalData.location.lat, lon: externalData.location.lon }}
-            currentConditions={environmentalParams}
-          />
-        )}
-        
-        {externalData.location && (
-          <GeographicMicroAnomalyPanel
-            latitude={externalData.location.lat}
-            longitude={externalData.location.lon}
-            location={externalData.location.city}
-          />
-        )}
-      </div>
+      {/* Asset-Specific Intelligence */}
+      {externalData.location && (
+        <AssetLearningPanel
+          buildingType={buildingType}
+          location={{ lat: externalData.location.lat, lon: externalData.location.lon }}
+          currentConditions={environmentalParams}
+        />
+      )}
     </div>
   );
 };
