@@ -135,7 +135,7 @@ const Index = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="overview" className="text-sm font-medium">
-              Overview
+              Environmental Overview
             </TabsTrigger>
             <TabsTrigger value="patterns" className="text-sm font-medium">
               Pattern Intelligence
