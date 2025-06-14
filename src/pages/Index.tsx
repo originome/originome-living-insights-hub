@@ -2,26 +2,22 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Eye, BarChart3, Users, Building } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Building, Users, MapPin, Share, Download } from 'lucide-react';
 import { OriginomeHeader } from '@/components/OriginomeHeader';
-import { DashboardHeader } from '@/components/DashboardHeader';
-import { PatternOfTheDayBanner } from '@/components/PatternOfTheDayBanner';
-import { ConfigurationControls } from '@/components/ConfigurationControls';
-import { PatternRiskAnalysis } from '@/components/PatternRiskAnalysis';
-import { AnalysisDatabase } from '@/components/AnalysisDatabase';
 import { ExecutiveDashboard } from '@/components/ExecutiveDashboard';
+import { PatternIntelligenceTab } from '@/components/PatternIntelligenceTab';
+import { AssetPerformanceTab } from '@/components/AssetPerformanceTab';
+import { AnalyticsTrendsTab } from '@/components/AnalyticsTrendsTab';
 import { useApiIntegration } from '@/hooks/useApiIntegration';
 import { useCosmicData } from '@/hooks/useCosmicData';
 import { useEnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 import { useLocationState } from '@/hooks/useLocationState';
 import { useToast } from '@/hooks/use-toast';
-import { PatternEngineService } from '@/services/patternEngineService';
-import { AdvancedAnalyticsSection } from '@/components/AdvancedAnalyticsSection';
 
 const Index = () => {
   const { toast } = useToast();
-  const [viewMode, setViewMode] = useState<'executive' | 'technical'>('executive');
+  const [activeTab, setActiveTab] = useState('overview');
   
   // Use custom hooks for state management
   const {
@@ -43,7 +39,6 @@ const Index = () => {
     refreshData
   } = useApiIntegration(location, buildingType, populationGroup);
 
-  // Add cosmic data integration with correct coordinate access
   const {
     cosmicData,
     isLoading: isCosmicLoading,
@@ -54,15 +49,6 @@ const Index = () => {
     externalData.location?.lat,
     externalData.location?.lon
   );
-
-  // Generate pattern insights and absenteeism data
-  const patternInsight = cosmicData ? 
-    PatternEngineService.generatePatternOfTheDay(environmentalParams, externalData, cosmicData, buildingType) :
-    null;
-
-  const absenteeismData = cosmicData ?
-    PatternEngineService.calculateAbsenteeismRisk(environmentalParams, externalData, cosmicData, buildingType) :
-    null;
 
   useEffect(() => {
     if (error) {
@@ -94,33 +80,11 @@ const Index = () => {
         lastUpdated={lastUpdated}
       />
       
-      {/* View Toggle Controls */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-        <div className="container mx-auto px-4 py-4">
+      {/* Context Information Bar */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <ToggleGroup 
-                type="single" 
-                value={viewMode} 
-                onValueChange={(value) => value && setViewMode(value as 'executive' | 'technical')}
-                className="bg-gray-100 p-1 rounded-lg"
-              >
-                <ToggleGroupItem 
-                  value="executive" 
-                  className="data-[state=on]:bg-white data-[state=on]:shadow-sm px-4 py-2 rounded-md transition-all"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Executive View
-                </ToggleGroupItem>
-                <ToggleGroupItem 
-                  value="technical" 
-                  className="data-[state=on]:bg-white data-[state=on]:shadow-sm px-4 py-2 rounded-md transition-all"
-                >
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Technical View
-                </ToggleGroupItem>
-              </ToggleGroup>
-              
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-xs">
                   <Building className="h-3 w-3 mr-1" />
@@ -130,20 +94,61 @@ const Index = () => {
                   <Users className="h-3 w-3 mr-1" />
                   {populationGroup}
                 </Badge>
+                {externalData.location && (
+                  <Badge variant="outline" className="text-xs">
+                    <MapPin className="h-3 w-3 mr-1" />
+                    {externalData.location.city}, {externalData.location.region}
+                  </Badge>
+                )}
               </div>
+              
+              {lastUpdated && (
+                <div className="text-sm text-gray-500">
+                  Updated: {lastUpdated.toLocaleTimeString()}
+                </div>
+              )}
             </div>
 
-            <div className="text-sm text-gray-500">
-              {viewMode === 'executive' ? 'Simplified insights for decision makers' : 'Detailed technical analysis'}
+            {/* Action Bar */}
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-gray-600 hover:text-gray-800"
+              >
+                <Share className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+              <Button 
+                size="sm" 
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
             </div>
           </div>
         </div>
       </div>
       
-      <div className="container mx-auto px-4 py-6 space-y-8">
-        {viewMode === 'executive' ? (
-          <>
-            {/* Executive Dashboard View */}
+      <div className="container mx-auto px-4 py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="overview" className="text-sm font-medium">
+              Environmental Overview
+            </TabsTrigger>
+            <TabsTrigger value="patterns" className="text-sm font-medium">
+              Pattern Intelligence
+            </TabsTrigger>
+            <TabsTrigger value="assets" className="text-sm font-medium">
+              Asset Performance
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="text-sm font-medium">
+              Analytics & Trends
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
             <ExecutiveDashboard
               environmentalParams={environmentalParams}
               externalData={externalData}
@@ -151,54 +156,28 @@ const Index = () => {
               buildingType={buildingType}
               populationGroup={populationGroup}
             />
-          </>
-        ) : (
-          <>
-            {/* Technical Dashboard View */}
-            <ConfigurationControls
-              location={location}
+          </TabsContent>
+
+          <TabsContent value="patterns" className="space-y-6">
+            <PatternIntelligenceTab
+              environmentalParams={environmentalParams}
+              externalData={externalData}
+              cosmicData={cosmicData}
               buildingType={buildingType}
               populationGroup={populationGroup}
+              isCosmicLoading={isCosmicLoading}
               onLocationChange={handleLocationChange}
               onBuildingTypeChange={handleBuildingTypeChange}
               onPopulationGroupChange={handlePopulationGroupChange}
-              externalData={externalData}
-              isLoading={isLoading}
-              onRefresh={refreshData}
-              environmentalParams={environmentalParams}
               onParamChange={handleParamChange}
+              onRefresh={refreshData}
+              isLoading={isLoading}
+              location={location}
             />
+          </TabsContent>
 
-            {/* Pattern of the Day Banner */}
-            <PatternOfTheDayBanner
-              environmentalParams={environmentalParams}
-              externalData={externalData}
-              cosmicData={cosmicData}
-              buildingType={buildingType}
-              populationGroup={populationGroup}
-            />
-
-            <PatternRiskAnalysis
-              environmentalParams={environmentalParams}
-              externalData={externalData}
-              cosmicData={cosmicData}
-              buildingType={buildingType}
-              populationGroup={populationGroup}
-              patternInsight={patternInsight}
-              absenteeismData={absenteeismData}		
-              isCosmicLoading={isCosmicLoading}
-            />
-
-            {/* Advanced Analytics Section */}
-            <AdvancedAnalyticsSection
-              environmentalParams={environmentalParams}
-              externalData={externalData}
-              cosmicData={cosmicData}
-              buildingType={buildingType}
-              populationGroup={populationGroup}
-            />
-
-            <AnalysisDatabase
+          <TabsContent value="assets" className="space-y-6">
+            <AssetPerformanceTab
               environmentalParams={environmentalParams}
               externalData={externalData}
               cosmicData={cosmicData}
@@ -206,8 +185,19 @@ const Index = () => {
               populationGroup={populationGroup}
               isCosmicLoading={isCosmicLoading}
             />
-          </>
-        )}
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <AnalyticsTrendsTab
+              environmentalParams={environmentalParams}
+              externalData={externalData}
+              cosmicData={cosmicData}
+              buildingType={buildingType}
+              populationGroup={populationGroup}
+              isCosmicLoading={isCosmicLoading}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
