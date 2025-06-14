@@ -12,6 +12,9 @@ import { AbsenteeismRiskPanel } from '@/components/AbsenteeismRiskPanel';
 import { PatternOfTheDayBanner } from '@/components/PatternOfTheDayBanner';
 import { HistoricalInsightPanel } from '@/components/HistoricalInsightPanel';
 import { WhatMakesOriginomeDifferentModal } from '@/components/WhatMakesOriginomeDifferentModal';
+import { CompoundRiskMatrix } from '@/components/CompoundRiskMatrix';
+import { RateOfChangeAnalytics } from '@/components/RateOfChangeAnalytics';
+import { PatternRecognitionEngine } from '@/components/PatternRecognitionEngine';
 import { useApiIntegration } from '@/hooks/useApiIntegration';
 import { useCosmicData } from '@/hooks/useCosmicData';
 import { useEnvironmentalParams } from '@/hooks/useEnvironmentalParams';
@@ -130,7 +133,29 @@ const Index = () => {
           populationGroup={populationGroup}
         />
 
-        {/* Pattern Engine and Absenteeism Risk Row - PROMINENTLY DISPLAYED */}
+        {/* Advanced Pattern Recognition & Risk Analysis */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <CompoundRiskMatrix
+            environmentalParams={environmentalParams}
+            externalData={externalData}
+            cosmicData={cosmicData}
+            buildingType={buildingType}
+          />
+          <RateOfChangeAnalytics
+            environmentalParams={environmentalParams}
+            externalData={externalData}
+          />
+        </div>
+
+        {/* Machine Learning Pattern Recognition */}
+        <PatternRecognitionEngine
+          environmentalParams={environmentalParams}
+          externalData={externalData}
+          cosmicData={cosmicData}
+          buildingType={buildingType}
+        />
+
+        {/* Pattern Engine and Absenteeism Risk Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {patternInsight && (
             <PatternEnginePanel
@@ -151,7 +176,7 @@ const Index = () => {
         {/* Historical Insight Panel */}
         <HistoricalInsightPanel />
 
-        {/* Cosmic & Environmental Forces Section - PROMINENTLY DISPLAYED */}
+        {/* Cosmic & Environmental Forces Section */}
         <CosmicConditionsSection
           cosmicData={cosmicData}
           isCosmicLoading={isCosmicLoading}
