@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 
 export interface ExternalData {
@@ -48,6 +49,24 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
 
   const isUSZipCode = (query: string): boolean => {
     return /^\d{5}(-\d{4})?$/.test(query.trim());
+  };
+
+  // Create a deterministic hash function for consistent air quality estimates
+  const simpleHash = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash);
+  };
+
+  // Create a seeded random number generator for consistent results
+  const seededRandom = (seed: number, min: number = 0, max: number = 1): number => {
+    const x = Math.sin(seed) * 10000;
+    const randomValue = x - Math.floor(x);
+    return min + randomValue * (max - min);
   };
 
   const fetchLocationData = async (locationQuery: string) => {
@@ -256,6 +275,9 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
   const getLocationBasedEstimate = (lat: number, lon: number, locationInfo: any) => {
     console.log(`Generating location-based air quality estimate for ${locationInfo.city}, ${locationInfo.region}`);
     
+    // Create a consistent seed based on location
+    const locationSeed = simpleHash(`${locationInfo.city}_${locationInfo.region}_${lat.toFixed(2)}_${lon.toFixed(2)}`);
+    
     // More sophisticated estimation based on location characteristics
     let baseAQI = 35; // Default moderate air quality
     
@@ -294,20 +316,20 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
     if (isSummer) baseAQI += 10; // Higher ozone in summer
     if (isWinter && lat > 35) baseAQI += 5; // Heating season pollution
     
-    // Add some realistic variation
-    const variation = Math.floor(Math.random() * 20) - 10;
+    // Add consistent variation based on location seed instead of random
+    const variation = Math.floor(seededRandom(locationSeed, -10, 10));
     const finalAQI = Math.max(10, Math.min(150, baseAQI + variation));
     
-    const pm25 = Math.round(finalAQI * 0.4 + Math.random() * 5);
+    const pm25 = Math.round(finalAQI * 0.4 + seededRandom(locationSeed + 1, 0, 5));
     
     return {
       aqi: finalAQI,
       pm25,
-      pm10: Math.round(pm25 * 1.5 + Math.random() * 10),
-      o3: Math.round(Math.random() * 50) + 20,
-      no2: Math.round(Math.random() * 30) + 10,
-      so2: Math.round(Math.random() * 10) + 2,
-      co: Math.round(Math.random() * 2) + 1,
+      pm10: Math.round(pm25 * 1.5 + seededRandom(locationSeed + 2, 0, 10)),
+      o3: Math.round(seededRandom(locationSeed + 3, 20, 70)),
+      no2: Math.round(seededRandom(locationSeed + 4, 10, 40)),
+      so2: Math.round(seededRandom(locationSeed + 5, 2, 12)),
+      co: Math.round(seededRandom(locationSeed + 6, 1, 3)),
       source: `Estimated for ${locationInfo.city}, ${locationInfo.region}`
     };
   };
@@ -343,13 +365,16 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
       if (isWinter) baseTemp = lat > 35 ? 5 : -5; // Warmer in south
       if (isSummer) baseTemp = lat > 35 ? 25 : 20; // Cooler in north
       
+      // Use consistent seed for weather estimates too
+      const weatherSeed = simpleHash(`weather_${lat.toFixed(2)}_${lon.toFixed(2)}`);
+      
       return {
-        temperature: baseTemp + Math.floor(Math.random() * 10) - 5,
-        humidity: Math.floor(Math.random() * 30) + 40,
-        pressure: Math.floor(Math.random() * 40) + 1005,
-        windSpeed: Math.round((Math.random() * 15 + 2) * 10) / 10,
-        uvIndex: Math.floor(Math.random() * 8) + 1,
-        visibility: Math.floor(Math.random() * 10) + 8
+        temperature: baseTemp + Math.floor(seededRandom(weatherSeed, -5, 5)),
+        humidity: Math.floor(seededRandom(weatherSeed + 1, 40, 70)),
+        pressure: Math.floor(seededRandom(weatherSeed + 2, 1005, 1045)),
+        windSpeed: Math.round(seededRandom(weatherSeed + 3, 2, 17) * 10) / 10,
+        uvIndex: Math.floor(seededRandom(weatherSeed + 4, 1, 9)),
+        visibility: Math.floor(seededRandom(weatherSeed + 5, 8, 18))
       };
     } catch (err) {
       console.error('Weather fetch error:', err);
@@ -400,11 +425,14 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
         fluLevels[Math.min(3, baseViralLevel + 1)] : 
         fluLevels[Math.max(0, baseViralLevel - 1)];
       
+      // Use consistent seed for health data too
+      const healthSeed = simpleHash(`health_${region}_${buildingType}_${populationGroup}`);
+      
       return {
         viralActivity,
-        respiratoryIllness: Math.round((Math.random() * 10 + 5) * combinedFactor),
+        respiratoryIllness: Math.round(seededRandom(healthSeed, 5, 15) * combinedFactor),
         fluActivity,
-        riskLevel: Math.round((Math.random() * 5 + 3) * combinedFactor)
+        riskLevel: Math.round(seededRandom(healthSeed + 1, 3, 8) * combinedFactor)
       };
     } catch (err) {
       console.error('Health surveillance fetch error:', err);
@@ -419,7 +447,7 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
     setError(null);
     
     try {
-      console.log('Fetching real-time data for location:', location);
+      console.log('Fetching real-time data for location:', location, 'buildingType:', buildingType, 'populationGroup:', populationGroup);
       
       const locationData = await fetchLocationData(location);
       console.log('Location resolved:', locationData);
@@ -431,6 +459,7 @@ export const useApiIntegration = (location: string, buildingType?: string, popul
       ]);
       
       console.log('Air quality data:', airQuality);
+      console.log('Building type used:', buildingType, 'Population group used:', populationGroup);
       
       setExternalData({
         airQuality,
