@@ -1,10 +1,8 @@
 
 import React from 'react';
-import { PredictiveAnalyticsPanel } from '@/components/PredictiveAnalyticsPanel';
-import { EnterpriseIntegrationDashboard } from '@/components/EnterpriseIntegrationDashboard';
-import { AutomatedReportingDashboard } from '@/components/AutomatedReportingDashboard';
-import { EnvironmentalParams } from '@/hooks/useEnvironmentalParams';
+import { GeographicMicroAnomalyPanel } from '@/components/GeographicMicroAnomalyPanel';
 import { ExternalData } from '@/hooks/useApiIntegration';
+import { EnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 import { CosmicData } from '@/hooks/useCosmicData';
 
 interface AdvancedAnalyticsSectionProps {
@@ -22,26 +20,19 @@ export const AdvancedAnalyticsSection: React.FC<AdvancedAnalyticsSectionProps> =
   buildingType,
   populationGroup
 }) => {
+  // Only show geographic analysis if we have location data
+  if (!externalData.location?.lat || !externalData.location?.lon) {
+    return null;
+  }
+
   return (
-    <>
-      {/* Predictive Analytics - Environmental Velocity Forecasting */}
-      <PredictiveAnalyticsPanel
-        environmentalParams={environmentalParams}
-        externalData={externalData}
-        cosmicData={cosmicData}
-        buildingType={buildingType}
+    <div className="space-y-6">
+      {/* Geographic Micro-Anomaly Detection */}
+      <GeographicMicroAnomalyPanel
+        latitude={externalData.location.lat}
+        longitude={externalData.location.lon}
+        location={`${externalData.location.city}, ${externalData.location.region}`}
       />
-
-      {/* Enterprise Integration Dashboard */}
-      <EnterpriseIntegrationDashboard
-        environmentalParams={environmentalParams}
-      />
-
-      {/* Automated Reporting and Compliance */}
-      <AutomatedReportingDashboard
-        environmentalParams={environmentalParams}
-        buildingType={buildingType}
-      />
-    </>
+    </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -6,7 +7,7 @@ import { MicroAnomalyData } from '@/services/satelliteDataService';
 // IMPORTANT: You need to add your Mapbox public token here for the map to work.
 // You can get a free token from https://www.mapbox.com/
 // For production, it's recommended to store this in a secure way, like Supabase secrets.
-mapboxgl.accessToken = 'pk.eyJ1Ijoib3JpZ2lub21lIiwiYSI6ImNtYnd0enNlajB3cnYybXBxMXZhZXl2eXoifQ.pHmSai2O3d9uh4E_xTUPkw';
+mapboxgl.accessToken = 'YOUR_MAPBOX_PUBLIC_TOKEN';
 
 interface InteractiveMapProps {
   latitude: number;
