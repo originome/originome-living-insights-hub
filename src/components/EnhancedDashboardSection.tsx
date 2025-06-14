@@ -6,6 +6,7 @@ import { RealTimeAnalyticsDashboard } from '@/components/RealTimeAnalyticsDashbo
 import { BusinessDriverVisualization } from '@/components/BusinessDriverVisualization';
 import { CascadePreventionPlaybook } from '@/components/CascadePreventionPlaybook';
 import { TechnicalArchitectureSection } from '@/components/TechnicalArchitectureSection';
+import { ScientificROISection } from '@/components/ScientificROISection';
 import { ExternalData } from '@/hooks/useApiIntegration';
 import { EnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 import { CosmicData } from '@/hooks/useCosmicData';
@@ -42,11 +43,20 @@ export const EnhancedDashboardSection: React.FC<EnhancedDashboardSectionProps> =
 
   return (
     <>
-      {/* Technical Architecture Section - New Priority */}
+      {/* Technical Architecture Section */}
       <TechnicalArchitectureSection
         environmentalParams={environmentalParams}
         externalData={externalData}
         cosmicData={cosmicData}
+      />
+
+      {/* Scientific Evidence Integration & ROI Demonstration */}
+      <ScientificROISection
+        environmentalParams={environmentalParams}
+        externalData={externalData}
+        cosmicData={cosmicData}
+        buildingType={buildingType}
+        occupantCount={100}
       />
 
       {/* Real-Time Analytics Dashboard */}

@@ -3,17 +3,19 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Brain, Zap, TrendingUp, AlertTriangle, Info } from 'lucide-react';
+import { Brain, Zap, TrendingUp, AlertTriangle, Info, DollarSign, Award } from 'lucide-react';
 import { PatternInsight } from '@/services/patternEngineService';
 
 interface PatternEnginePanelProps {
   patternInsight: PatternInsight;
   isLoading?: boolean;
+  showROIHighlight?: boolean;
 }
 
 export const PatternEnginePanel: React.FC<PatternEnginePanelProps> = ({
   patternInsight,
-  isLoading = false
+  isLoading = false,
+  showROIHighlight = false
 }) => {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -29,6 +31,7 @@ export const PatternEnginePanel: React.FC<PatternEnginePanelProps> = ({
       case 'correlation_alert': return AlertTriangle;
       case 'prediction': return TrendingUp;
       case 'anomaly': return Zap;
+      case 'compound_pattern': return Brain;
       default: return Info;
     }
   };
@@ -62,9 +65,16 @@ export const PatternEnginePanel: React.FC<PatternEnginePanelProps> = ({
             <Brain className="h-6 w-6 text-purple-600" />
             Originome Pattern Engine
           </CardTitle>
-          <Badge variant="outline" className="text-xs">
-            AI-Powered Insights
-          </Badge>
+          <div className="flex gap-2">
+            <Badge variant="outline" className="text-xs">
+              AI-Powered Insights
+            </Badge>
+            {patternInsight.type === 'compound_pattern' && (
+              <Badge className="text-xs bg-purple-600 text-white">
+                Compound Pattern
+              </Badge>
+            )}
+          </div>
         </div>
         <div className="text-xs text-purple-600 font-medium">
           Multiscale Environmental Intelligence • Pattern of the Day
@@ -95,14 +105,41 @@ export const PatternEnginePanel: React.FC<PatternEnginePanelProps> = ({
               </div>
             )}
 
+            {patternInsight.compoundFactors && (
+              <div className="mb-3 bg-purple-50 p-3 rounded border">
+                <div className="text-xs font-medium text-purple-800 mb-1">Compound Pattern Analysis:</div>
+                <div className="text-xs text-purple-700 mb-1">
+                  <strong>Primary Factor:</strong> {patternInsight.compoundFactors.primary}
+                </div>
+                <div className="text-xs text-purple-700 mb-1">
+                  <strong>Secondary Factors:</strong> {patternInsight.compoundFactors.secondary.join(', ')}
+                </div>
+                <div className="text-xs text-purple-700">
+                  <strong>Amplification:</strong> {patternInsight.compoundFactors.amplificationFactor}x normal impact
+                </div>
+              </div>
+            )}
+
             <div className="bg-white/60 p-3 rounded border-l-2 border-purple-300">
               <div className="text-xs font-medium text-purple-800 mb-1">Recommended Action:</div>
               <div className="text-xs text-purple-700">{patternInsight.recommendation}</div>
             </div>
 
             {patternInsight.historicalContext && (
-              <div className="text-xs text-gray-600 mt-2">
+              <div className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded">
                 <strong>Historical Context:</strong> {patternInsight.historicalContext}
+              </div>
+            )}
+
+            {showROIHighlight && patternInsight.preventedIncidentValue && (
+              <div className="bg-green-50 p-3 rounded-lg border border-green-200 mt-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <DollarSign className="h-4 w-4 text-green-600" />
+                  <div className="text-xs font-medium text-green-800">Prevented Cost Value</div>
+                </div>
+                <div className="text-sm font-semibold text-green-700">
+                  ${patternInsight.preventedIncidentValue.toLocaleString()} per incident avoided
+                </div>
               </div>
             )}
           </AlertDescription>
@@ -110,7 +147,10 @@ export const PatternEnginePanel: React.FC<PatternEnginePanelProps> = ({
 
         {patternInsight.citation && (
           <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-            <div className="text-xs font-medium text-blue-800 mb-1">Scientific Evidence:</div>
+            <div className="flex items-center gap-2 mb-1">
+              <Award className="h-4 w-4 text-blue-600" />
+              <div className="text-xs font-medium text-blue-800">Scientific Evidence Integration:</div>
+            </div>
             <div className="text-xs text-blue-700">{patternInsight.citation}</div>
           </div>
         )}
@@ -118,7 +158,7 @@ export const PatternEnginePanel: React.FC<PatternEnginePanelProps> = ({
         <div className="text-xs text-gray-500 pt-2 border-t">
           <strong>What makes this different?</strong> Traditional dashboards show individual metrics. 
           Originome reveals hidden patterns across environmental, cosmic, and biological systems that 
-          drive organizational performance.
+          drive organizational performance, backed by peer-reviewed research and quantified ROI.
         </div>
       </CardContent>
     </Card>
