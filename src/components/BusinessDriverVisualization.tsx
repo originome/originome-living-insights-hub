@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, ScatterChart, Scatter } from 'recharts';
-import { TrendingUp, BarChart3, Scatter3D, ArrowRight, Target } from 'lucide-react';
+import { TrendingUp, BarChart3, Activity, ArrowRight, Target } from 'lucide-react';
 import { EnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 
 interface BusinessDriverVisualizationProps {
@@ -140,7 +139,7 @@ export const BusinessDriverVisualization: React.FC<BusinessDriverVisualizationPr
               size="sm"
               onClick={() => setViewMode('scatter')}
             >
-              <Scatter3D className="h-4 w-4 mr-1" />
+              <Activity className="h-4 w-4 mr-1" />
               Scatter
             </Button>
           </div>
