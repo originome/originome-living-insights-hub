@@ -210,7 +210,7 @@ export class ReportingService {
               filters: {},
               aggregation: 'hour'
             },
-            complianceRules: Array.from(this.complianceRules.keys())
+            complianceRules: Array.from(this.complianceRules.values())
           },
           {
             id: 'parameter_trends',
