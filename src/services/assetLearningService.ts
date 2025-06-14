@@ -168,7 +168,7 @@ export class AssetLearningService {
     };
   }
 
-  private static calculateRiskScore(asset: AssetFingerprint, conditions: any): number {
+  private static calculateR asset, conditions: any): number {
     let riskScore = 0;
     
     // Temperature risk
