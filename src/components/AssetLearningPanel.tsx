@@ -295,7 +295,7 @@ export const AssetLearningPanel: React.FC<AssetLearningPanelProps> = ({
               <div>
                 <div className="flex justify-between mb-1">
                   <span>Thermal Inertia</span>
-                  <span>{(as SetFingerprint.vulnerabilitySignature.thermalInertia * 100).toFixed(0)}%</span>
+                  <span>{(assetFingerprint.vulnerabilitySignature.thermalInertia * 100).toFixed(0)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
