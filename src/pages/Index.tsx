@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { OriginomeHeader } from '@/components/OriginomeHeader';
 import { DashboardHeader } from '@/components/DashboardHeader';
@@ -12,6 +11,7 @@ import { useEnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 import { useLocationState } from '@/hooks/useLocationState';
 import { useToast } from '@/hooks/use-toast';
 import { PatternEngineService } from '@/services/patternEngineService';
+import { AdvancedAnalyticsSection } from '@/components/AdvancedAnalyticsSection';
 
 const Index = () => {
   const { toast } = useToast();
@@ -127,6 +127,15 @@ const Index = () => {
           patternInsight={patternInsight}
           absenteeismData={absenteeismData}		
           isCosmicLoading={isCosmicLoading}
+        />
+
+        {/* Advanced Analytics Section - NEW ENTERPRISE FEATURES */}
+        <AdvancedAnalyticsSection
+          environmentalParams={environmentalParams}
+          externalData={externalData}
+          cosmicData={cosmicData}
+          buildingType={buildingType}
+          populationGroup={populationGroup}
         />
 
         <AnalysisDatabase
