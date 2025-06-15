@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +11,7 @@ interface CompoundRiskMatrixProps {
   environmentalParams: EnvironmentalParams;
   externalData: ExternalData;
   cosmicData: CosmicData | null;
+  buildingType?: string;
 }
 
 interface CompoundRisk {
@@ -30,7 +30,8 @@ interface CompoundRisk {
 export const CompoundRiskMatrix: React.FC<CompoundRiskMatrixProps> = ({
   environmentalParams,
   externalData,
-  cosmicData
+  cosmicData,
+  buildingType
 }) => {
   const compoundRisks = useMemo((): CompoundRisk[] => {
     const risks: CompoundRisk[] = [];
