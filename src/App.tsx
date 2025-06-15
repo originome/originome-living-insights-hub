@@ -1,37 +1,64 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import Header from "./components/core/Header";
+import TabNavigation from "./components/core/TabNavigation";
+import EventHorizonView from "./views/EventHorizonView";
+import EnvironmentalVelocityView from "./views/EnvironmentalVelocityView";
+import GeographicIntelligenceView from "./views/GeographicIntelligenceView";
+import AssetIntelligenceView from "./views/AssetIntelligenceView";
 
-// Create QueryClient with proper configuration
+// Create QueryClient with proper configuration for real-time data
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
+      retry: 2,
+      refetchOnWindowFocus: true,
+      refetchInterval: 30000, // Auto-refresh every 30 seconds for live monitoring
     },
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+export type TabType = 'event-horizon' | 'velocity' | 'geographic' | 'assets';
+
+const App = () => {
+  const [activeTab, setActiveTab] = useState<TabType>('event-horizon');
+
+  const renderActiveView = () => {
+    switch (activeTab) {
+      case 'event-horizon':
+        return <EventHorizonView />;
+      case 'velocity':
+        return <EnvironmentalVelocityView />;
+      case 'geographic':
+        return <GeographicIntelligenceView />;
+      case 'assets':
+        return <AssetIntelligenceView />;
+      default:
+        return <EventHorizonView />;
+    }
+  };
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+          <Header />
+          <div className="container mx-auto px-4 py-6 space-y-6">
+            <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+            <main className="min-h-[600px]">
+              {renderActiveView()}
+            </main>
+          </div>
+        </div>
+        <Toaster />
+        <Sonner />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
