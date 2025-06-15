@@ -1,14 +1,9 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Zap, AlertTriangle, Activity } from "lucide-react";
+import { Activity } from "lucide-react";
 import VelocityChart from "../components/visualization/VelocityChart";
-
-interface EnvironmentalVelocityViewProps {
-  dateRange: string;
-  location: string;
-  assetFilter: string;
-}
+import { ViewProps } from "../types/viewProps";
 
 // Mock velocity data for different environmental parameters
 const velocityData = [
@@ -82,7 +77,7 @@ const velocityData = [
   }
 ];
 
-const EnvironmentalVelocityView: React.FC<EnvironmentalVelocityViewProps> = ({
+const EnvironmentalVelocityView: React.FC<ViewProps> = ({
   dateRange,
   location,
   assetFilter
@@ -213,29 +208,6 @@ const EnvironmentalVelocityView: React.FC<EnvironmentalVelocityViewProps> = ({
           </CardContent>
         </Card>
       )}
-
-      {/* System Insights */}
-      <Card className="bg-gradient-to-r from-slate-50 to-emerald-50 border-slate-200">
-        <CardContent className="py-6">
-          <div className="flex items-start space-x-4">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <Zap className="h-6 w-6 text-emerald-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Velocity Intelligence Summary</h3>
-              <p className="text-base text-slate-700 leading-relaxed mb-3">
-                <span className="font-semibold text-emerald-900">Environmental velocity patterns</span> reveal 
-                compound acceleration trends across {filteredData.length} monitored parameters. 
-                Rate-of-change analysis enables intervention 2-4 hours before threshold breaches.
-              </p>
-              <p className="text-sm text-slate-600">
-                <strong>Key Insight:</strong> Focus on velocity trends rather than absolute values 
-                for earlier pattern detection and more effective mitigation strategies.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
