@@ -2,142 +2,123 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, CheckCircle, Clock, Filter, Brain, Network } from "lucide-react";
+import { AlertTriangle, CheckCircle, Clock, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EventCard from "../components/visualization/EventCard";
 
-interface CompoundPatternEvent {
+interface RiskEvent {
   id: string;
   title: string;
   severity: 'critical' | 'high' | 'moderate' | 'low';
-  category: 'compound_pattern' | 'cascade_risk' | 'non_obvious_correlation' | 'predictive_intelligence';
+  category: 'environmental' | 'operational' | 'cascade' | 'compound';
   description: string;
-  patternConfidence: number;
-  predictiveWindow: string;
-  compoundFactors: Array<{
-    factor: string;
-    contribution: number;
-    hidden: boolean;
+  riskScore: number;
+  confidence: number;
+  dataSources: Array<{
+    type: 'public' | 'private';
+    name: string;
+    icon: string;
   }>;
-  businessImpact: {
-    description: string;
-    preventedCosts: number;
-    timeAdvantage: string;
-  };
-  intelligencePlaybook: Array<{
+  playbook: Array<{
     id: string;
     action: string;
     completed: boolean;
-    priority: 'critical' | 'high' | 'medium';
-    nonObvious: boolean;
+    priority: 'high' | 'medium' | 'low';
   }>;
   detectedAt: Date;
-  competitiveAdvantage: string;
+  estimatedImpact: string;
+  geographicScope: string;
 }
 
 const EventHorizonView: React.FC = () => {
-  const [events, setEvents] = useState<CompoundPatternEvent[]>([]);
+  const [events, setEvents] = useState<RiskEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'compound' | 'predictive'>('all');
+  const [filter, setFilter] = useState<'all' | 'critical' | 'active'>('all');
 
   useEffect(() => {
-    // Generate sophisticated pattern intelligence events
-    const generatePatternEvents = () => {
-      const patternEvents: CompoundPatternEvent[] = [
+    // Simulate loading and generating live risk events
+    const generateDemoEvents = () => {
+      const demoEvents: RiskEvent[] = [
         {
           id: '1',
-          title: 'Compound Pattern: Cognitive Fatigue Window Imminent',
+          title: 'Compound Electromagnetic-Weather Risk Pattern',
           severity: 'critical',
-          category: 'compound_pattern',
-          description: 'Solar wind velocity spike (720 km/s) × CO₂ acceleration (δ+18ppm/15min) × barometric drop creating compound cognitive stress pattern. Non-obvious correlation detected 67 minutes before traditional threshold breach.',
-          patternConfidence: 94,
-          predictiveWindow: '45-90 minutes before cognitive performance decline',
-          compoundFactors: [
-            { factor: 'Solar Wind Velocity Spike', contribution: 35, hidden: true },
-            { factor: 'CO₂ Rate-of-Change Acceleration', contribution: 28, hidden: false },
-            { factor: 'Barometric Pressure Velocity', contribution: 22, hidden: true },
-            { factor: 'Circadian Vulnerability Window', contribution: 15, hidden: true }
+          category: 'compound',
+          description: 'Solar wind velocity spike (720 km/s) coinciding with atmospheric pressure drop creating cascade risk for electrical infrastructure.',
+          riskScore: 87,
+          confidence: 92,
+          dataSources: [
+            { type: 'public', name: 'NOAA Space Weather', icon: '🌎' },
+            { type: 'public', name: 'ECMWF Weather Model', icon: '🌎' },
+            { type: 'private', name: 'Client Grid Monitoring', icon: '🔒' }
           ],
-          businessImpact: {
-            description: 'Decision-making accuracy drops 15-23% during compound convergence',
-            preventedCosts: 45000,
-            timeAdvantage: '67 minutes early warning vs. basic CO₂ alerts'
-          },
-          intelligencePlaybook: [
-            { id: '1', action: 'Defer critical decision meetings by 90 minutes', completed: false, priority: 'critical', nonObvious: true },
-            { id: '2', action: 'Activate enhanced ventilation protocols', completed: false, priority: 'high', nonObvious: false },
-            { id: '3', action: 'Send cognitive load reduction advisory to leadership', completed: false, priority: 'high', nonObvious: true },
-            { id: '4', action: 'Monitor for cascade effects in adjacent zones', completed: false, priority: 'medium', nonObvious: true }
+          playbook: [
+            { id: '1', action: 'Activate backup power systems', completed: false, priority: 'high' },
+            { id: '2', action: 'Notify field maintenance teams', completed: false, priority: 'high' },
+            { id: '3', action: 'Monitor transformer temperatures', completed: false, priority: 'medium' },
+            { id: '4', action: 'Prepare emergency response protocols', completed: false, priority: 'medium' }
           ],
-          detectedAt: new Date(Date.now() - 12 * 60 * 1000),
-          competitiveAdvantage: 'Detected via non-obvious solar-cognitive correlation unavailable to standard monitoring'
+          detectedAt: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
+          estimatedImpact: 'Equipment failure risk: 34% | Duration: 4-6 hours',
+          geographicScope: 'Northern Grid Sector, 15km radius'
         },
         {
           id: '2',
-          title: 'Predictive Intelligence: Asset Vulnerability Window Opening',
+          title: 'Accelerating Air Quality Degradation',
           severity: 'high',
-          category: 'predictive_intelligence',
-          description: 'Unique asset fingerprint match: Equipment manufactured 2018-2019 shows 340% failure probability spike when geomagnetic Kp-index >4 coincides with humidity >65%. Historical pattern suggests 6-hour vulnerability window.',
-          patternConfidence: 87,
-          predictiveWindow: '6-hour asset stress window beginning in 23 minutes',
-          compoundFactors: [
-            { factor: 'Geomagnetic Storm Activity (Kp=5.2)', contribution: 42, hidden: true },
-            { factor: 'Manufacturing Year Signature (2018-2019)', contribution: 31, hidden: true },
-            { factor: 'Humidity Threshold Interaction', contribution: 18, hidden: false },
-            { factor: 'Seasonal Electromagnetic Resonance', contribution: 9, hidden: true }
+          category: 'environmental',
+          description: 'PM2.5 velocity indicates rapid deterioration (δ+15 μg/m³/hour) suggesting incoming pollution front.',
+          riskScore: 72,
+          confidence: 89,
+          dataSources: [
+            { type: 'public', name: 'EPA AirNow', icon: '🌎' },
+            { type: 'private', name: 'Local Sensor Network', icon: '🔒' },
+            { type: 'public', name: 'Wind Pattern Analysis', icon: '🌎' }
           ],
-          businessImpact: {
-            description: 'Asset failure during compound stress costs $18K-32K in emergency repairs',
-            preventedCosts: 28000,
-            timeAdvantage: 'Asset-specific fingerprint detection 4-6 hours before failure'
-          },
-          intelligencePlaybook: [
-            { id: '1', action: 'Activate backup systems for vulnerable assets', completed: false, priority: 'critical', nonObvious: true },
-            { id: '2', action: 'Deploy field technicians to high-risk units', completed: false, priority: 'high', nonObvious: false },
-            { id: '3', action: 'Monitor electromagnetic field variations', completed: false, priority: 'medium', nonObvious: true }
+          playbook: [
+            { id: '1', action: 'Issue health advisory to workforce', completed: true, priority: 'high' },
+            { id: '2', action: 'Adjust HVAC filtration systems', completed: false, priority: 'high' },
+            { id: '3', action: 'Postpone outdoor maintenance activities', completed: false, priority: 'medium' }
           ],
-          detectedAt: new Date(Date.now() - 28 * 60 * 1000),
-          competitiveAdvantage: 'Asset fingerprinting reveals equipment-specific vulnerabilities invisible to generic monitoring'
+          detectedAt: new Date(Date.now() - 42 * 60 * 1000), // 42 minutes ago
+          estimatedImpact: 'Health risk window: 2-4 hours | Operations impact: Moderate',
+          geographicScope: 'Metropolitan area, wind-dependent spread'
         },
         {
           id: '3',
-          title: 'Non-Obvious Correlation: Productivity Cascade Risk Pattern',
+          title: 'Legacy Asset Vulnerability Window',
           severity: 'moderate',
-          category: 'non_obvious_correlation',
-          description: 'Cross-domain pattern detection: High pollen count (Very High = 9.1/10) × morning solar activity × indoor humidity creates compound biological stress. Historical data shows 19% productivity decline during this specific convergence.',
-          patternConfidence: 82,
-          predictiveWindow: '2-4 hour productivity impact window',
-          compoundFactors: [
-            { factor: 'Pollen Count Seasonal Peak', contribution: 38, hidden: false },
-            { factor: 'Solar Activity Morning Spike', contribution: 29, hidden: true },
-            { factor: 'Indoor Humidity Interaction', contribution: 21, hidden: false },
-            { factor: 'Circadian Immune Response', contribution: 12, hidden: true }
+          category: 'operational',
+          description: 'Asset fingerprint match: High humidity (78%) + temperature differential creates stress pattern for 2018-era equipment.',
+          riskScore: 58,
+          confidence: 76,
+          dataSources: [
+            { type: 'private', name: 'Asset Management System', icon: '🔒' },
+            { type: 'public', name: 'Local Weather Station', icon: '🌎' },
+            { type: 'private', name: 'Historical Failure Database', icon: '🔒' }
           ],
-          businessImpact: {
-            description: 'Compound biological stress reduces team productivity by 19% for 2-4 hours',
-            preventedCosts: 12000,
-            timeAdvantage: 'Non-obvious correlation detected 3 hours before impact'
-          },
-          intelligencePlaybook: [
-            { id: '1', action: 'Adjust meeting schedules to avoid peak stress window', completed: false, priority: 'high', nonObvious: true },
-            { id: '2', action: 'Enhanced air filtration during compound convergence', completed: false, priority: 'medium', nonObvious: false },
-            { id: '3', action: 'Issue biological stress advisory to HR', completed: false, priority: 'medium', nonObvious: true }
+          playbook: [
+            { id: '1', action: 'Inspect Unit 7 cooling system', completed: false, priority: 'medium' },
+            { id: '2', action: 'Check expansion joint tolerances', completed: false, priority: 'low' },
+            { id: '3', action: 'Schedule preventive maintenance window', completed: false, priority: 'low' }
           ],
-          detectedAt: new Date(Date.now() - 45 * 60 * 1000),
-          competitiveAdvantage: 'Reveals hidden pollen-solar-circadian correlations missed by standard environmental monitoring'
+          detectedAt: new Date(Date.now() - 68 * 60 * 1000), // 1 hour 8 minutes ago
+          estimatedImpact: 'Maintenance cost avoidance: $12,000-18,000',
+          geographicScope: 'Facility assets manufactured 2017-2019'
         }
       ];
       
-      setEvents(patternEvents);
+      setEvents(demoEvents);
       setIsLoading(false);
     };
 
-    setTimeout(generatePatternEvents, 1500);
+    // Simulate data loading
+    setTimeout(generateDemoEvents, 1500);
   }, []);
 
   const filteredEvents = events.filter(event => {
-    if (filter === 'compound') return event.category === 'compound_pattern';
-    if (filter === 'predictive') return event.category === 'predictive_intelligence' || event.category === 'non_obvious_correlation';
+    if (filter === 'critical') return event.severity === 'critical';
+    if (filter === 'active') return event.playbook.some(item => !item.completed);
     return true;
   });
 
@@ -146,14 +127,14 @@ const EventHorizonView: React.FC = () => {
       <div className="flex items-center justify-center h-96">
         <div className="text-center space-y-4">
           <div className="animate-pulse">
-            <Brain className="h-12 w-12 text-purple-600 mx-auto" />
+            <AlertTriangle className="h-12 w-12 text-blue-600 mx-auto" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-slate-900">
-              Analyzing Compound Pattern Intelligence...
+              Scanning Environmental Patterns...
             </h3>
             <p className="text-slate-600">
-              Detecting non-obvious correlations across 47+ data streams
+              Analyzing real-time data streams for risk verification
             </p>
           </div>
         </div>
@@ -163,18 +144,18 @@ const EventHorizonView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Pattern Intelligence Header */}
-      <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+      {/* Event Horizon Header */}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Brain className="h-6 w-6 text-purple-600" />
+              <AlertTriangle className="h-6 w-6 text-blue-600" />
               <div>
-                <CardTitle className="text-xl text-purple-900">
-                  Event Horizon - Pattern Intelligence Feed
+                <CardTitle className="text-xl text-blue-900">
+                  Event Horizon - Live Risk Detection
                 </CardTitle>
-                <p className="text-purple-700 text-sm">
-                  Non-obvious correlations • Compound pattern detection • Predictive intelligence advantages
+                <p className="text-blue-700 text-sm">
+                  Proactive monitoring • Pattern-based verification • Real-time intelligence
                 </p>
               </div>
             </div>
@@ -186,32 +167,31 @@ const EventHorizonView: React.FC = () => {
                 onClick={() => setFilter('all')}
                 className="text-xs"
               >
-                All Patterns ({events.length})
+                All Events ({events.length})
               </Button>
               <Button
-                variant={filter === 'compound' ? 'default' : 'outline'}
+                variant={filter === 'critical' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setFilter('compound')}
+                onClick={() => setFilter('critical')}
                 className="text-xs"
               >
-                <Network className="h-3 w-3 mr-1" />
-                Compound ({events.filter(e => e.category === 'compound_pattern').length})
+                Critical ({events.filter(e => e.severity === 'critical').length})
               </Button>
               <Button
-                variant={filter === 'predictive' ? 'default' : 'outline'}
+                variant={filter === 'active' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setFilter('predictive')}
+                onClick={() => setFilter('active')}
                 className="text-xs"
               >
                 <Filter className="h-3 w-3 mr-1" />
-                Predictive
+                Active
               </Button>
             </div>
           </div>
         </CardHeader>
       </Card>
 
-      {/* Pattern Intelligence Feed */}
+      {/* Risk Events Feed */}
       <div className="space-y-4">
         {filteredEvents.length === 0 ? (
           <Card className="bg-green-50 border-green-200">
@@ -220,120 +200,46 @@ const EventHorizonView: React.FC = () => {
                 <CheckCircle className="h-16 w-16 text-green-600 mx-auto" />
                 <div>
                   <h3 className="text-lg font-semibold text-green-900">
-                    No Compound Pattern Risks Detected
+                    No Material Risk Events Detected
                   </h3>
                   <p className="text-green-700">
-                    All multi-domain patterns within acceptable convergence parameters
+                    All environmental patterns within acceptable parameters
                   </p>
                 </div>
                 <div className="flex items-center justify-center space-x-2 text-sm text-green-600">
                   <Clock className="h-4 w-4" />
-                  <span>Pattern intelligence engine actively monitoring</span>
+                  <span>Continuous monitoring active</span>
                 </div>
               </div>
             </CardContent>
           </Card>
         ) : (
           filteredEvents.map((event) => (
-            <Card key={event.id} className="border-l-4 border-purple-400">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Brain className="h-5 w-5 text-purple-600" />
-                    <div>
-                      <CardTitle className="text-lg text-purple-900">{event.title}</CardTitle>
-                      <p className="text-sm text-purple-700">{event.description}</p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Badge variant="outline" className="text-xs">
-                      {event.patternConfidence}% confidence
-                    </Badge>
-                    <Badge variant={event.severity === 'critical' ? 'destructive' : 'secondary'} className="text-xs">
-                      {event.severity.toUpperCase()}
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-semibold text-sm mb-2">Compound Factors</h4>
-                    <div className="space-y-1">
-                      {event.compoundFactors.map((factor, index) => (
-                        <div key={index} className="flex items-center justify-between text-xs">
-                          <span className={factor.hidden ? "text-purple-700 font-medium" : "text-gray-600"}>
-                            {factor.hidden && "🔍 "}{factor.factor}
-                          </span>
-                          <span className="text-gray-500">{factor.contribution}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-sm mb-2">Business Impact</h4>
-                    <div className="text-xs space-y-1">
-                      <div>{event.businessImpact.description}</div>
-                      <div className="text-green-700 font-medium">
-                        Prevented Cost: ${event.businessImpact.preventedCosts.toLocaleString()}
-                      </div>
-                      <div className="text-blue-700 font-medium">
-                        Time Advantage: {event.businessImpact.timeAdvantage}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-purple-50 p-3 rounded-lg">
-                  <div className="font-semibold text-sm text-purple-900 mb-1">Competitive Intelligence Advantage</div>
-                  <div className="text-xs text-purple-800">{event.competitiveAdvantage}</div>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-sm mb-2">Intelligence Playbook</h4>
-                  <div className="space-y-1">
-                    {event.intelligencePlaybook.map((action) => (
-                      <div key={action.id} className="flex items-center space-x-2 text-xs">
-                        <input type="checkbox" checked={action.completed} readOnly className="h-3 w-3" />
-                        <span className={action.nonObvious ? "text-purple-700 font-medium" : "text-gray-600"}>
-                          {action.nonObvious && "🧠 "}{action.action}
-                        </span>
-                        <Badge variant="outline" className="text-xs">{action.priority}</Badge>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="text-xs text-gray-500 border-t pt-2">
-                  Pattern detected: {event.detectedAt.toLocaleTimeString()} • 
-                  Predictive window: {event.predictiveWindow}
-                </div>
-              </CardContent>
-            </Card>
+            <EventCard key={event.id} event={event} />
           ))
         )}
       </div>
 
-      {/* Intelligence Engine Status */}
+      {/* System Status Footer */}
       <Card className="bg-slate-50 border-slate-200">
         <CardContent className="py-4">
           <div className="flex items-center justify-between text-sm text-slate-600">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                <span>Pattern Intelligence Engine: Active</span>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>Pattern Engine: Active</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                <span>Non-Obvious Correlations: 47 streams</span>
+                <span>Data Streams: 47 sources</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Compound Pattern Detection: Enabled</span>
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <span>Learning Mode: Enabled</span>
               </div>
             </div>
             <div>
-              Next intelligence scan: <span className="font-mono">00:18</span>
+              Next pattern scan: <span className="font-mono">00:23</span>
             </div>
           </div>
         </CardContent>
