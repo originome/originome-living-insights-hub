@@ -24,6 +24,10 @@ interface AssetFingerprint {
     }>;
     failurePattern: string;
     resilience: string[];
+    // Properties for AssetCard compatibility
+    primaryTriggers: string[];
+    riskConditions: string[];
+    historicalEvents: number;
   };
   environmentalSensitivity: {
     temperature: { min: number; max: number; optimal: number };
@@ -57,31 +61,32 @@ const AssetIntelligenceView: React.FC = () => {
       const locations = ['Building A - Floor 3', 'Main Facility - East Wing', 'Data Center - Rack 47', 'Production Line 2', 'Rooftop Array - Section C'];
       const healthStatuses = ['optimal', 'good', 'degraded', 'critical'] as const;
 
+      const signatures = [
+        {
+          narrative: 'This asset exhibits a unique vulnerability to compound stress events where solar wind speed exceeds 600 km/s while local grid frequency dips below 59.97 Hz.',
+          factors: [
+            { domain: 'Space Weather', parameter: 'Solar Wind Speed', condition: '> 600 km/s' },
+            { domain: 'Grid', parameter: 'Frequency', condition: '< 59.97 Hz' },
+          ],
+          failurePattern: 'Sudden cascading electronic failure under compound stress.',
+          resilience: ['High thermal tolerance', 'Immune to humidity shifts'],
+        },
+        {
+          narrative: 'Vulnerability is triggered by rapid atmospheric pressure drops (> 4 hPa/hr) occurring during periods of high internal vibration (> 0.5g).',
+          factors: [
+            { domain: 'Environmental', parameter: 'Pressure Drop Rate', condition: '> 4 hPa/hr' },
+            { domain: 'Operational', parameter: 'Internal Vibration', condition: '> 0.5g' },
+          ],
+          failurePattern: 'Seal and gasket failure leading to gradual performance degradation.',
+          resilience: ['Stable under electromagnetic interference'],
+        }
+      ] as const;
+      
       const demoAssets: AssetFingerprint[] = Array.from({ length: 8 }, (_, index) => {
         const type = assetTypes[index % assetTypes.length];
         const manufactureYear = 2015 + Math.floor(Math.random() * 8);
         const healthStatus = healthStatuses[Math.floor(Math.random() * healthStatuses.length)];
-        
-        const signatures = [
-          {
-            narrative: 'This asset exhibits a unique vulnerability to compound stress events where solar wind speed exceeds 600 km/s while local grid frequency dips below 59.97 Hz.',
-            factors: [
-              { domain: 'Space Weather', parameter: 'Solar Wind Speed', condition: '> 600 km/s' },
-              { domain: 'Grid', parameter: 'Frequency', condition: '< 59.97 Hz' },
-            ],
-            failurePattern: 'Sudden cascading electronic failure under compound stress.',
-            resilience: ['High thermal tolerance', 'Immune to humidity shifts'],
-          },
-          {
-            narrative: 'Vulnerability is triggered by rapid atmospheric pressure drops (> 4 hPa/hr) occurring during periods of high internal vibration (> 0.5g).',
-            factors: [
-              { domain: 'Environmental', parameter: 'Pressure Drop Rate', condition: '> 4 hPa/hr' },
-              { domain: 'Operational', parameter: 'Internal Vibration', condition: '> 0.5g' },
-            ],
-            failurePattern: 'Seal and gasket failure leading to gradual performance degradation.',
-            resilience: ['Stable under electromagnetic interference'],
-          }
-        ];
+        const signature = signatures[index % signatures.length];
         
         return {
           id: `asset-${index + 1}`,
@@ -92,7 +97,12 @@ const AssetIntelligenceView: React.FC = () => {
           location: locations[index % locations.length],
           riskScore: Math.floor(Math.random() * 100),
           healthStatus,
-          vulnerabilitySignature: signatures[index % signatures.length],
+          vulnerabilitySignature: {
+            ...signature,
+            primaryTriggers: signature.factors.map(f => f.parameter),
+            riskConditions: signature.factors.map(f => `${f.parameter} ${f.condition}`),
+            historicalEvents: Math.floor(Math.random() * 5),
+          },
           environmentalSensitivity: {
             temperature: { min: 5, max: 45, optimal: 22 },
             humidity: { min: 20, max: 80, optimal: 45 },

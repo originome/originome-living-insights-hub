@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,11 @@ interface RiskEvent {
   detectedAt: Date;
   predictiveWindow: string;
   geographicScope: string;
+  
+  // For EventCard component compatibility
+  description: string;
+  playbook: string[];
+  estimatedImpact: string;
 }
 
 const EventHorizonView: React.FC = () => {
@@ -53,7 +59,15 @@ const EventHorizonView: React.FC = () => {
           ],
           detectedAt: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
           predictiveWindow: 'Impact probability peaks in 45-90 mins',
-          geographicScope: 'Northern Grid Sector, 15km radius'
+          geographicScope: 'Northern Grid Sector, 15km radius',
+          // Compatibility fields
+          description: 'Pattern identified: Solar wind velocity spike (>700 km/s) is converging with a rapid atmospheric pressure drop. This pattern historically precedes cascade failures in electrical infrastructure by 45-90 minutes.',
+          playbook: [
+            'Activate grid-stabilizing protocols immediately',
+            'Pre-position maintenance teams to high-risk substations',
+            'Isolate non-critical loads to preserve grid integrity',
+          ],
+          estimatedImpact: 'High risk of regional power grid instability.',
         },
         {
           id: '2',
@@ -75,7 +89,15 @@ const EventHorizonView: React.FC = () => {
           ],
           detectedAt: new Date(Date.now() - 42 * 60 * 1000), // 42 minutes ago
           predictiveWindow: 'Health risk window opens in 2 hours',
-          geographicScope: 'Metropolitan area, wind-dependent spread'
+          geographicScope: 'Metropolitan area, wind-dependent spread',
+          // Compatibility fields
+          description: 'High-velocity PM2.5 front (δ+15 μg/m³/hour) coupled with low wind shear indicates an imminent, persistent air quality event. This pattern is correlated with a 40% increase in unscheduled absenteeism.',
+          playbook: [
+            'Upgrade HVAC filtration to MERV 13 or higher',
+            'Advise remote work for sensitive employee groups',
+            'Reschedule non-essential outdoor operations',
+          ],
+          estimatedImpact: 'Significant impact on workforce productivity.',
         },
         {
           id: '3',
@@ -97,7 +119,15 @@ const EventHorizonView: React.FC = () => {
           ],
           detectedAt: new Date(Date.now() - 68 * 60 * 1000), // 1 hour 8 minutes ago
           predictiveWindow: 'Failure risk elevated over next 72 hours',
-          geographicScope: 'Facility assets manufactured 2017-2019'
+          geographicScope: 'Facility assets manufactured 2017-2019',
+          // Compatibility fields
+          description: 'Asset vulnerability fingerprint match: A combination of high humidity (>75%) and micro-vibrations from nearby construction is creating a known failure pattern for 2018-era HVAC units.',
+          playbook: [
+            'Inspect HVAC unit 7 for early signs of harmonic fatigue',
+            'Install vibration dampers as a preventative measure',
+            'Divert maintenance resources from low-risk assets',
+          ],
+          estimatedImpact: 'Moderate risk of HVAC downtime and repair costs.',
         }
       ];
       
