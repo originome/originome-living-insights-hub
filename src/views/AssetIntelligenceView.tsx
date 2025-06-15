@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +24,6 @@ interface AssetFingerprint {
     }>;
     failurePattern: string;
     resilience: string[];
-    // Properties for AssetCard compatibility
     primaryTriggers: string[];
     riskConditions: string[];
     historicalEvents: number;
@@ -98,7 +98,8 @@ const AssetIntelligenceView: React.FC = () => {
           healthStatus,
           vulnerabilitySignature: {
             ...signature,
-            factors: [...signature.factors], // Fix: Create mutable copy
+            factors: [...signature.factors],
+            resilience: [...signature.resilience], // Create a mutable copy here
             primaryTriggers: signature.factors.map(f => f.parameter),
             riskConditions: signature.factors.map(f => `${f.parameter} ${f.condition}`),
             historicalEvents: Math.floor(Math.random() * 5),
@@ -299,3 +300,4 @@ const AssetIntelligenceView: React.FC = () => {
 };
 
 export default AssetIntelligenceView;
+
