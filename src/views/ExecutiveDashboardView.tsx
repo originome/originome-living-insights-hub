@@ -1,17 +1,14 @@
 
 import React from 'react';
+import { ExecutivePatternBanner } from '@/components/ExecutivePatternBanner';
 import { ExecutiveDashboard } from '@/components/ExecutiveDashboard';
 import { ScientificROISection } from '@/components/ScientificROISection';
-import { RealTimeStreamingDashboard } from '@/components/RealTimeStreamingDashboard';
 import { useApiIntegration } from '@/hooks/useApiIntegration';
 import { useCosmicData } from '@/hooks/useCosmicData';
 import { useEnvironmentalParams } from '@/hooks/useEnvironmentalParams';
 import { useLocationState } from '@/hooks/useLocationState';
-import { useState } from 'react';
 
 const ExecutiveDashboardView: React.FC = () => {
-  const [streamingActive, setStreamingActive] = useState(true);
-  
   // Use custom hooks for state management
   const {
     location,
@@ -44,8 +41,15 @@ const ExecutiveDashboardView: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Executive Summary Dashboard */}
+    <div className="space-y-8">
+      {/* Hero Pattern Banner - Most Prominent */}
+      <ExecutivePatternBanner
+        environmentalParams={environmentalParams}
+        externalData={externalData}
+        cosmicData={cosmicData}
+      />
+
+      {/* Streamlined Executive Summary */}
       <ExecutiveDashboard
         environmentalParams={environmentalParams}
         externalData={externalData}
@@ -54,17 +58,7 @@ const ExecutiveDashboardView: React.FC = () => {
         populationGroup={populationGroup}
       />
 
-      {/* Real-Time Intelligence Engine for C-Suite */}
-      <RealTimeStreamingDashboard
-        environmentalParams={environmentalParams}
-        externalData={externalData}
-        cosmicData={cosmicData}
-        buildingType={buildingType}
-        streamingActive={streamingActive}
-        onToggleStreaming={() => setStreamingActive(!streamingActive)}
-      />
-
-      {/* Scientific ROI Demonstration */}
+      {/* ROI Demonstration - Business Focus */}
       <ScientificROISection
         environmentalParams={environmentalParams}
         externalData={externalData}
