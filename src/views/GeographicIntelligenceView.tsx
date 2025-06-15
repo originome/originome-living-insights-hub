@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, MapPin, TrendingUp } from "lucide-react";
 
@@ -50,25 +50,25 @@ const patternZones = [
 ];
 
 const riskColors: Record<string, string> = {
-  critical: "bg-red-50 text-red-800",
-  high: "bg-orange-50 text-orange-800",
-  moderate: "bg-yellow-50 text-yellow-900"
+  critical: "bg-red-100 text-red-700",
+  high: "bg-orange-100 text-orange-700",
+  moderate: "bg-yellow-100 text-yellow-700"
 };
 
 const GeographicIntelligenceView: React.FC = () => {
   return (
-    <div className="space-y-10 font-sans">
+    <div className="space-y-8">
       {/* Header */}
-      <Card className="bg-gradient-to-r from-purple-50 to-indigo-100/80 border-0 shadow-none">
+      <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
         <CardHeader>
-          <div className="flex items-center space-x-4">
-            <TrendingUp className="h-8 w-8 text-purple-700" />
+          <div className="flex items-center space-x-3">
+            <TrendingUp className="h-6 w-6 text-purple-600" />
             <div>
-              <CardTitle className="text-2xl sm:text-3xl font-extrabold text-purple-900 font-serif tracking-tight">
-                Geographic Pattern Intelligence
+              <CardTitle className="text-xl text-purple-900">
+                Geographic Pattern Intelligence – Micro-Convergence Detection
               </CardTitle>
-              <p className="text-purple-700 text-base sm:text-lg font-medium mt-1">
-                Real-time mapping of pattern fusion zones: Only actionable pattern intelligence, not just weather overlays.
+              <p className="text-purple-700 text-sm">
+                Real-time mapping of pattern fusion zones and compound risk convergence—no weather or metric overlays, only actionable pattern intelligence.
               </p>
             </div>
           </div>
@@ -76,31 +76,25 @@ const GeographicIntelligenceView: React.FC = () => {
       </Card>
 
       {/* Micro-Pattern Convergence Zones */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {patternZones.map((zone) => (
           <Card
             key={zone.id}
-            className={`border-0 rounded-2xl shadow-lg flex flex-col bg-gradient-to-br from-white via-fuchsia-50 to-slate-100 ${riskColors[zone.riskLevel]}`}
+            className={`border shadow-sm flex flex-col bg-gradient-to-br from-slate-50 to-fuchsia-50 ${riskColors[zone.riskLevel]} border-fuchsia-100`}
           >
-            <CardHeader className="pb-3 flex flex-col gap-1">
-              <div className="flex items-center space-x-3">
-                <AlertTriangle className={`h-6 w-6 ${zone.riskLevel === "critical"
-                  ? "text-red-600 animate-pulse"
-                  : zone.riskLevel === "high"
-                    ? "text-orange-600 animate-bounce"
-                    : "text-yellow-600"
-                  }`}
-                />
-                <span className="font-semibold text-lg sm:text-xl font-serif">{zone.title}</span>
+            <CardHeader className="pb-2 flex flex-col gap-1">
+              <div className="flex items-center space-x-2">
+                <AlertTriangle className={`h-5 w-5 ${zone.riskLevel === "critical" ? "text-red-600 animate-pulse" : zone.riskLevel === "high" ? "text-orange-600 animate-bounce" : "text-yellow-600"}`} />
+                <span className="font-bold text-fuchsia-900">{zone.title}</span>
               </div>
-              <div className="text-xs font-mono text-fuchsia-700 mt-1">Zone ID: {zone.id}</div>
+              <div className="text-xs text-fuchsia-700">Pattern Zone: {zone.id}</div>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-between space-y-4">
-              <div className="font-medium text-fuchsia-900 text-base leading-relaxed">{zone.fusionNarrative}</div>
-              <div className="text-xs font-mono text-fuchsia-700">{zone.geographicDescription}</div>
+            <CardContent className="flex-1 flex flex-col justify-between space-y-3">
+              <div className="font-medium text-fuchsia-900">{zone.fusionNarrative}</div>
+              <div className="text-xs font-mono text-fuchsia-600">{zone.geographicDescription}</div>
               <div className="mt-2">
-                <div className="text-xs text-slate-700 font-semibold mb-1">Convergence Factors</div>
-                <ul className="list-disc pl-5 text-sm space-y-1">
+                <div className="text-xs text-slate-600 font-semibold">Pattern Convergence Factors:</div>
+                <ul className="list-disc pl-5 text-sm">
                   {zone.factors.map((f, idx) => (
                     <li key={idx}>{f}</li>
                   ))}
@@ -112,15 +106,14 @@ const GeographicIntelligenceView: React.FC = () => {
       </div>
 
       {/* Summary Narrative */}
-      <Card className="bg-gradient-to-r from-indigo-100 via-fuchsia-50 to-white border-0 shadow-sm">
+      <Card className="bg-gradient-to-r from-indigo-100 to-fuchsia-50 border-indigo-200">
         <CardContent>
-          <div className="flex items-center space-x-3 mb-2">
-            <MapPin className="h-6 w-6 text-fuchsia-600" />
-            <span className="font-semibold text-lg font-serif text-fuchsia-900">Fusion Map Summary</span>
+          <div className="flex items-center space-x-2 mb-2">
+            <MapPin className="h-5 w-5 text-fuchsia-600" />
+            <span className="font-medium text-fuchsia-900">Compound Fusion Map</span>
           </div>
-          <div className="text-base text-fuchsia-900 font-medium">
-            <span className="font-extrabold text-fuchsia-900">Hyperlocal pattern convergence</span> detected across multiple zones.
-            Preemptive mapping lets you act before events. Focus intervention where patterns—not metrics—intersect.
+          <div className="text-sm text-fuchsia-800">
+            <span className="font-bold text-fuchsia-900">Hyperlocal pattern convergence</span> detected across multiple geographic vectors. Real-time mapping enables preemptive action before visible events occur. Focus interventions where patterns—not individual metrics—intersect.
           </div>
         </CardContent>
       </Card>
@@ -129,3 +122,4 @@ const GeographicIntelligenceView: React.FC = () => {
 };
 
 export default GeographicIntelligenceView;
+
