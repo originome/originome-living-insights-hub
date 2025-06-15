@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Building, Users, MapPin, Share, Download, Zap } from 'lucide-react';
 import { OriginomeHeader } from '@/components/OriginomeHeader';
+import { ExecutiveDashboard } from '@/components/ExecutiveDashboard';
 import { RealTimeStreamingDashboard } from '@/components/RealTimeStreamingDashboard';
+import { ScientificROISection } from '@/components/ScientificROISection';
 import { GeographicMicroAnomalyPanel } from '@/components/GeographicMicroAnomalyPanel';
 import { AssetLearningPanel } from '@/components/AssetLearningPanel';
 import { CrossDomainCorrelationPanel } from '@/components/CrossDomainCorrelationPanel';
@@ -22,7 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('intelligence');
+  const [activeTab, setActiveTab] = useState('executive');
   const [streamingActive, setStreamingActive] = useState(true);
   
   // Use custom hooks for state management
@@ -105,7 +107,10 @@ const Index = () => {
       
       <div className="container mx-auto px-4 py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
+            <TabsTrigger value="executive" className="text-sm font-medium">
+              Executive Dashboard
+            </TabsTrigger>
             <TabsTrigger value="intelligence" className="text-sm font-medium">
               Pattern Intelligence
             </TabsTrigger>
@@ -120,7 +125,25 @@ const Index = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* Pattern Intelligence Tab - Primary Focus */}
+          {/* Executive Dashboard - Primary Focus */}
+          <TabsContent value="executive" className="space-y-4">
+            <ExecutiveDashboard
+              environmentalParams={environmentalParams}
+              externalData={externalData}
+              cosmicData={cosmicData}
+              buildingType={buildingType}
+              populationGroup={populationGroup}
+            />
+
+            <ScientificROISection
+              environmentalParams={environmentalParams}
+              externalData={externalData}
+              cosmicData={cosmicData}
+              buildingType={buildingType}
+            />
+          </TabsContent>
+
+          {/* Pattern Intelligence Tab - Technical Deep Dive */}
           <TabsContent value="intelligence" className="space-y-4">
             {/* Real-Time Streaming Dashboard - Top Priority */}
             <RealTimeStreamingDashboard
