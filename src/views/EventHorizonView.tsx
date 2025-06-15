@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle, Clock, Filter, BrainCircuit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EventCard from "../components/visualization/EventCard";
-import { ViewProps } from "../types/viewProps";
 
 interface RiskEvent {
   id: string;
@@ -35,11 +35,7 @@ interface RiskEvent {
   estimatedImpact: string;
 }
 
-const EventHorizonView: React.FC<ViewProps> = ({
-  dateRange,
-  location,
-  assetFilter
-}) => {
+const EventHorizonView: React.FC = () => {
   const [events, setEvents] = useState<RiskEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'critical' | 'active'>('all');
@@ -149,15 +145,10 @@ const EventHorizonView: React.FC<ViewProps> = ({
   }, []);
 
   const filteredEvents = events.filter(event => {
-    // Filter by asset filter if provided
-    if (assetFilter && !event.title.toLowerCase().includes(assetFilter.toLowerCase()) && 
-        !event.category.toLowerCase().includes(assetFilter.toLowerCase())) {
-      return false;
-    }
-    
-    // Filter by severity
     if (filter === 'critical') return event.severity === 'critical';
     if (filter === 'active') {
+      // NOTE: This logic needs to be updated based on the new `mitigationInsights`
+      // For now, we'll consider all events with insights as 'active'.
       return event.mitigationInsights && event.mitigationInsights.length > 0;
     }
     return true;
@@ -196,7 +187,7 @@ const EventHorizonView: React.FC<ViewProps> = ({
                   Event Horizon - Compound Risk Feed
                 </CardTitle>
                 <p className="text-blue-700 text-sm">
-                  Cross-domain pattern detection for {location.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} • {dateRange}
+                  Cross-domain pattern detection • Predictive intelligence • Non-obvious threat analysis
                 </p>
               </div>
             </div>

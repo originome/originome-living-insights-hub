@@ -3,12 +3,6 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, MapPin, TrendingUp, Clock } from "lucide-react";
 
-interface GeographicIntelligenceViewProps {
-  dateRange: string;
-  location: string;
-  assetFilter: string;
-}
-
 // Simulated micro-pattern convergence data
 const patternZones = [
   {
@@ -85,20 +79,7 @@ const riskStyles = {
   }
 };
 
-const GeographicIntelligenceView: React.FC<GeographicIntelligenceViewProps> = ({
-  dateRange,
-  location,
-  assetFilter
-}) => {
-  // Filter zones based on props (mock filtering for now)
-  const filteredZones = patternZones.filter(zone => {
-    if (assetFilter) {
-      return zone.title.toLowerCase().includes(assetFilter.toLowerCase()) ||
-             zone.factors.some(factor => factor.toLowerCase().includes(assetFilter.toLowerCase()));
-    }
-    return true;
-  });
-
+const GeographicIntelligenceView: React.FC = () => {
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Enhanced Header */}
@@ -113,13 +94,11 @@ const GeographicIntelligenceView: React.FC<GeographicIntelligenceViewProps> = ({
                 Geographic Pattern Intelligence
               </CardTitle>
               <p className="text-lg text-slate-700 leading-relaxed">
-                Real-time mapping of pattern fusion zones for {location.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                Real-time mapping of pattern fusion zones and compound risk convergence
               </p>
-              <div className="flex items-center space-x-4 mt-2 text-sm text-slate-600">
-                <span>Timeframe: {dateRange}</span>
-                <span>•</span>
-                <span>{filteredZones.length} active zones detected</span>
-              </div>
+              <p className="text-sm text-slate-600 mt-2">
+                Advanced detection algorithms identify non-obvious threat patterns before they manifest
+              </p>
             </div>
           </div>
         </CardHeader>
@@ -129,23 +108,19 @@ const GeographicIntelligenceView: React.FC<GeographicIntelligenceViewProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <Card className="bg-white border-slate-200">
           <CardContent className="py-6 text-center">
-            <div className="text-3xl font-bold text-slate-900 mb-1">{filteredZones.length}</div>
+            <div className="text-3xl font-bold text-slate-900 mb-1">3</div>
             <div className="text-sm font-medium text-slate-600">Active Zones</div>
           </CardContent>
         </Card>
         <Card className="bg-white border-slate-200">
           <CardContent className="py-6 text-center">
-            <div className="text-3xl font-bold text-red-600 mb-1">
-              {filteredZones.filter(z => z.riskLevel === 'critical').length}
-            </div>
+            <div className="text-3xl font-bold text-red-600 mb-1">1</div>
             <div className="text-sm font-medium text-slate-600">Critical Risk</div>
           </CardContent>
         </Card>
         <Card className="bg-white border-slate-200">
           <CardContent className="py-6 text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-1">
-              {Math.round(filteredZones.reduce((sum, z) => sum + parseInt(z.confidence), 0) / filteredZones.length)}%
-            </div>
+            <div className="text-3xl font-bold text-blue-600 mb-1">84%</div>
             <div className="text-sm font-medium text-slate-600">Avg Confidence</div>
           </CardContent>
         </Card>
@@ -162,7 +137,7 @@ const GeographicIntelligenceView: React.FC<GeographicIntelligenceViewProps> = ({
         <h2 className="text-xl font-bold text-slate-900 mb-4">Active Pattern Zones</h2>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredZones.map((zone) => {
+          {patternZones.map((zone) => {
             const styles = riskStyles[zone.riskLevel];
             return (
               <Card
