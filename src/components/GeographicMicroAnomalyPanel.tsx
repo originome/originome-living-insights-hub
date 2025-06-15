@@ -53,6 +53,11 @@ export const GeographicMicroAnomalyPanel: React.FC<GeographicMicroAnomalyPanelPr
         lst: 18 + Math.random() * 15,
         aerosolOpticalDepth: 0.1 + Math.random() * 0.2,
         no2TroposphericColumn: (2 + Math.random() * 8) * 1e15,
+        uvIndex: Math.max(0, 5 + (Math.random() * 6)),
+        surfaceReflectance: 0.1 + (Math.random() * 0.4),
+        cloudCover: Math.random() * 100,
+        precipitationRate: Math.random() * 5,
+        source: 'NASA MODIS/Landsat Fusion',
         timestamp: new Date()
       };
       setSatelliteData(demoSatelliteData);
