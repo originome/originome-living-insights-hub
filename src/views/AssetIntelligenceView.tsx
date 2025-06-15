@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, TrendingUp, Fingerprint } from "lucide-react";
@@ -45,27 +45,25 @@ const assetPatterns = [
 ];
 
 const riskColors: Record<string, string> = {
-  critical: "bg-red-100 text-red-700",
-  high: "bg-orange-100 text-orange-700",
-  moderate: "bg-yellow-100 text-yellow-700"
+  critical: "bg-red-50 text-red-800",
+  high: "bg-orange-50 text-orange-900",
+  moderate: "bg-yellow-50 text-yellow-900"
 };
 
 const AssetIntelligenceView: React.FC = () => {
-  // Remove all legacy loading and metrics logic; everything is patterns now
-
   return (
-    <div className="space-y-7">
+    <div className="space-y-10 font-sans">
       {/* Header */}
-      <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
+      <Card className="bg-gradient-to-r from-emerald-50 to-teal-100/80 border-0 shadow-none">
         <CardHeader>
-          <div className="flex items-center space-x-3">
-            <Fingerprint className="h-6 w-6 text-emerald-600" />
+          <div className="flex items-center space-x-4">
+            <Fingerprint className="h-8 w-8 text-emerald-700" />
             <div>
-              <CardTitle className="text-xl text-emerald-900">
-                Asset Intelligence – Vulnerability Pattern Fingerprinting
+              <CardTitle className="text-2xl sm:text-3xl font-extrabold text-emerald-900 font-serif tracking-tight">
+                Asset Intelligence
               </CardTitle>
-              <p className="text-emerald-700 text-sm">
-                Non-obvious failure fingerprints • Compound signature detection • Cross-domain trigger analysis 
+              <p className="text-emerald-700 text-base sm:text-lg font-medium mt-1">
+                Vulnerability pattern fingerprints powered by cross-domain trigger analysis.
               </p>
             </div>
           </div>
@@ -73,28 +71,34 @@ const AssetIntelligenceView: React.FC = () => {
       </Card>
 
       {/* Asset Pattern Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
         {assetPatterns.map((ap) => (
-          <Card key={ap.id} className={`border shadow-sm flex flex-col bg-gradient-to-br from-slate-50 to-emerald-50 ${riskColors[ap.riskLevel]} border-emerald-100`}>
-            <CardHeader className="pb-2 flex flex-col gap-1">
-              <div className="flex items-center space-x-2">
-                <AlertTriangle className={`h-5 w-5 ${ap.riskLevel === "critical" ? "text-red-600 animate-pulse" : ap.riskLevel === "high" ? "text-orange-600 animate-bounce" : "text-yellow-600"}`} />
-                <span className="font-bold text-emerald-900">{ap.name}</span>
+          <Card key={ap.id} className={`border-0 rounded-2xl shadow-lg flex flex-col bg-gradient-to-br from-white via-emerald-50 to-slate-100 ${riskColors[ap.riskLevel]}`}>
+            <CardHeader className="pb-3 flex flex-col gap-1">
+              <div className="flex items-center space-x-3">
+                <AlertTriangle className={`h-6 w-6 ${ap.riskLevel === "critical"
+                  ? "text-red-600 animate-pulse"
+                  : ap.riskLevel === "high"
+                    ? "text-orange-600 animate-bounce"
+                    : "text-yellow-600"
+                  }`}
+                />
+                <span className="font-semibold text-lg sm:text-xl font-serif">{ap.name}</span>
               </div>
-              <div className="text-xs text-emerald-700">{ap.pattern}</div>
+              <div className="text-xs font-mono text-emerald-700 mt-1">{ap.pattern}</div>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-between space-y-3">
+            <CardContent className="flex-1 flex flex-col justify-between space-y-4">
               <div>
-                <div className="font-medium text-emerald-900">{ap.fingerprint}</div>
+                <div className="font-medium text-emerald-900 text-base leading-relaxed">{ap.fingerprint}</div>
                 <div className="text-xs font-mono text-emerald-600 mt-1">{ap.signature}</div>
               </div>
               <div>
-                <div className="text-xs text-slate-600 font-semibold">Compound Trigger:</div>
+                <div className="text-xs text-slate-700 font-semibold mb-1">Compound Trigger</div>
                 <div className="text-sm">{ap.trigger}</div>
               </div>
               <div>
-                <div className="text-xs text-slate-600 font-semibold">Resilience Factors:</div>
-                <ul className="list-disc pl-5 text-sm">
+                <div className="text-xs text-slate-700 font-semibold mb-1">Resilience Factors</div>
+                <ul className="list-disc pl-5 text-sm space-y-1">
                   {ap.resilience.map((r, idx) => (
                     <li key={idx}>{r}</li>
                   ))}
@@ -106,14 +110,15 @@ const AssetIntelligenceView: React.FC = () => {
       </div>
 
       {/* Summary Narrative */}
-      <Card className="bg-gradient-to-r from-emerald-100 to-teal-50 border-emerald-200">
+      <Card className="bg-gradient-to-r from-emerald-100 to-teal-50 border-0 shadow-sm">
         <CardContent>
-          <div className="flex items-center space-x-2 mb-2">
-            <TrendingUp className="h-5 w-5 text-emerald-700" />
-            <span className="font-medium text-emerald-900">Vulnerability Pattern Overview</span>
+          <div className="flex items-center space-x-3 mb-2">
+            <TrendingUp className="h-6 w-6 text-emerald-700" />
+            <span className="font-semibold text-lg font-serif text-emerald-900">Pattern Fingerprint Overview</span>
           </div>
-          <div className="text-sm text-emerald-800">
-            Real-time asset vulnerability mapping is powered by cross-domain pattern intelligence. Focus on non-obvious fingerprint clusters and compound failure triggers, not simple thresholds.
+          <div className="text-base text-emerald-900 font-medium">
+            Pattern intelligence reveals clusters and compound signatures—not just simple thresholds—
+            to focus interventions on true root vulnerabilities.
           </div>
         </CardContent>
       </Card>
@@ -122,4 +127,3 @@ const AssetIntelligenceView: React.FC = () => {
 };
 
 export default AssetIntelligenceView;
-
