@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +18,7 @@ export const GeographicMicroAnomalyPanel: React.FC<GeographicMicroAnomalyPanelPr
   location
 }) => {
   const [satelliteData, setSatelliteData] = useState<SatelliteData | null>(null);
-  const [microAnomalies, setMicroAnomalies] = useState<Micro AnomalyData[]>([]);
+  const [microAnomalies, setMicroAnomalies] = useState<MicroAnomalyData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
