@@ -6,7 +6,8 @@ import {
   TrendingUp, 
   Map, 
   Server,
-  Clock
+  Clock,
+  Briefcase
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TabType } from "../../App";
@@ -18,6 +19,14 @@ interface TabNavigationProps {
 
 const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
+    {
+      id: 'executive' as TabType,
+      label: 'Executive Dashboard',
+      icon: Briefcase,
+      description: 'Business Intelligence',
+      badge: 'ROI Focus',
+      badgeVariant: 'default' as const
+    },
     {
       id: 'event-horizon' as TabType,
       label: 'Event Horizon',

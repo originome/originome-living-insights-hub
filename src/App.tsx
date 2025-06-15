@@ -10,6 +10,7 @@ import EventHorizonView from "./views/EventHorizonView";
 import EnvironmentalVelocityView from "./views/EnvironmentalVelocityView";
 import GeographicIntelligenceView from "./views/GeographicIntelligenceView";
 import AssetIntelligenceView from "./views/AssetIntelligenceView";
+import ExecutiveDashboardView from "./views/ExecutiveDashboardView";
 
 // Create QueryClient with proper configuration for real-time data
 const queryClient = new QueryClient({
@@ -22,13 +23,15 @@ const queryClient = new QueryClient({
   },
 });
 
-export type TabType = 'event-horizon' | 'velocity' | 'geographic' | 'assets';
+export type TabType = 'executive' | 'event-horizon' | 'velocity' | 'geographic' | 'assets';
 
 const App = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('event-horizon');
+  const [activeTab, setActiveTab] = useState<TabType>('executive');
 
   const renderActiveView = () => {
     switch (activeTab) {
+      case 'executive':
+        return <ExecutiveDashboardView />;
       case 'event-horizon':
         return <EventHorizonView />;
       case 'velocity':
@@ -38,7 +41,7 @@ const App = () => {
       case 'assets':
         return <AssetIntelligenceView />;
       default:
-        return <EventHorizonView />;
+        return <ExecutiveDashboardView />;
     }
   };
 
