@@ -25,7 +25,7 @@ const queryClient = new QueryClient({
 
 export type TabType = 'executive' | 'event-horizon' | 'velocity' | 'geographic' | 'assets';
 
-const App = () => {
+const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('executive');
 
   const renderActiveView = () => {
