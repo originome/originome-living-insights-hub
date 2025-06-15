@@ -3,13 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building, Users, MapPin, Share, Download, Zap } from 'lucide-react';
+import { Building, Users, MapPin, Share, Download } from 'lucide-react';
 import { OriginomeHeader } from '@/components/OriginomeHeader';
-import { RiskEventHorizon } from '@/components/RiskEventHorizon';
-import { VelocityDetectionModule } from '@/components/VelocityDetectionModule';
-import { GeographicMicroAnomalyPanel } from '@/components/GeographicMicroAnomalyPanel';
-import { AssetLearningPanel } from '@/components/AssetLearningPanel';
 import { IntelligentAlertSystem } from '@/components/IntelligentAlertSystem';
+import { CompoundRiskMatrix } from '@/components/CompoundRiskMatrix';
+import { RateOfChangeAnalytics } from '@/components/RateOfChangeAnalytics';
+import { PatternIntelligenceTab } from '@/components/PatternIntelligenceTab';
+import { AssetPerformanceTab } from '@/components/AssetPerformanceTab';
+import { AnalyticsTrendsTab } from '@/components/AnalyticsTrendsTab';
 import { useApiIntegration } from '@/hooks/useApiIntegration';
 import { useCosmicData } from '@/hooks/useCosmicData';
 import { useEnvironmentalParams } from '@/hooks/useEnvironmentalParams';
@@ -18,8 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('event-horizon');
-  const [streamingActive, setStreamingActive] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
   
   // Use custom hooks for state management
   const {
@@ -55,16 +55,26 @@ const Index = () => {
   useEffect(() => {
     if (error) {
       toast({
-        title: "Data Stream Error",
+        title: "Data Fetch Error",
         description: error,
         variant: "destructive",
       });
     }
   }, [error, toast]);
 
+  useEffect(() => {
+    if (cosmicError) {
+      toast({
+        title: "Cosmic Data Error",
+        description: cosmicError,
+        variant: "destructive",
+      });
+    }
+  }, [cosmicError, toast]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      {/* Enterprise Header */}
+      {/* Originome Branded Header */}
       <OriginomeHeader 
         location={externalData.location}
         buildingType={buildingType}
@@ -72,119 +82,134 @@ const Index = () => {
         lastUpdated={lastUpdated}
       />
       
-      {/* Enterprise Status Bar */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
-        <div className="container mx-auto px-4 py-2">
+      {/* Context Information Bar */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Zap className="h-4 w-4 text-blue-600 animate-pulse" />
-              <span className="text-sm font-medium text-blue-800">
-                Perpetual Risk Monitoring Active
-              </span>
-              <Badge variant={streamingActive ? "default" : "secondary"} className="text-xs">
-                {streamingActive ? "LIVE INTELLIGENCE" : "PAUSED"}
-              </Badge>
-              <div className="text-xs text-blue-600">
-                Enterprise-Grade • Full Audit Trail • 99.9% Uptime
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  <Building className="h-3 w-3 mr-1" />
+                  {buildingType}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  <Users className="h-3 w-3 mr-1" />
+                  {populationGroup}
+                </Badge>
+                {externalData.location && (
+                  <Badge variant="outline" className="text-xs">
+                    <MapPin className="h-3 w-3 mr-1" />
+                    {externalData.location.city}, {externalData.location.region}
+                  </Badge>
+                )}
               </div>
+              
+              {lastUpdated && (
+                <div className="text-sm text-gray-500">
+                  Updated: {lastUpdated.toLocaleTimeString()}
+                </div>
+              )}
             </div>
+
+            {/* Action Bar */}
             <div className="flex gap-2">
-              <Button variant="ghost" size="sm" className="text-xs">
-                <Share className="h-3 w-3 mr-1" />
-                Share Intelligence
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-gray-600 hover:text-gray-800"
+              >
+                <Share className="h-4 w-4 mr-2" />
+                Share
               </Button>
-              <Button size="sm" className="text-xs bg-blue-600 hover:bg-blue-700">
-                <Download className="h-3 w-3 mr-1" />
-                Export Report
+              <Button 
+                size="sm" 
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export
               </Button>
             </div>
           </div>
         </div>
       </div>
       
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
-            <TabsTrigger value="event-horizon" className="text-sm font-medium">
-              Risk Event Horizon
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="overview" className="text-sm font-medium">
+              Pattern Intelligence
             </TabsTrigger>
-            <TabsTrigger value="velocity" className="text-sm font-medium">
-              Velocity Detection
-            </TabsTrigger>
-            <TabsTrigger value="geographic" className="text-sm font-medium">
-              Micro-Anomaly Map
+            <TabsTrigger value="patterns" className="text-sm font-medium">
+              Compound Risk Matrix
             </TabsTrigger>
             <TabsTrigger value="assets" className="text-sm font-medium">
-              Asset Intelligence
+              Asset Performance
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="text-sm font-medium">
+              Analytics & Trends
             </TabsTrigger>
           </TabsList>
 
-          {/* Risk Event Horizon - Primary Tab */}
-          <TabsContent value="event-horizon" className="space-y-4">
-            <RiskEventHorizon
+          <TabsContent value="overview" className="space-y-6">
+            <PatternIntelligenceTab
               environmentalParams={environmentalParams}
               externalData={externalData}
               cosmicData={cosmicData}
               buildingType={buildingType}
+              populationGroup={populationGroup}
+              isCosmicLoading={isCosmicLoading}
+              onLocationChange={handleLocationChange}
+              onBuildingTypeChange={handleBuildingTypeChange}
+              onPopulationGroupChange={handlePopulationGroupChange}
+              onParamChange={handleParamChange}
+              onRefresh={refreshData}
+              isLoading={isLoading}
+              location={location}
             />
+          </TabsContent>
 
-            {/* Intelligent Alert System - Compound Patterns */}
+          <TabsContent value="patterns" className="space-y-6">
             <IntelligentAlertSystem
               environmentalParams={environmentalParams}
               externalData={externalData}
               cosmicData={cosmicData}
               buildingType={buildingType}
             />
+            
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <CompoundRiskMatrix
+                environmentalParams={environmentalParams}
+                externalData={externalData}
+                cosmicData={cosmicData}
+                buildingType={buildingType}
+              />
+              <RateOfChangeAnalytics
+                environmentalParams={environmentalParams}
+                externalData={externalData}
+              />
+            </div>
           </TabsContent>
 
-          {/* Velocity Detection Module */}
-          <TabsContent value="velocity" className="space-y-4">
-            <VelocityDetectionModule
+          <TabsContent value="assets" className="space-y-6">
+            <AssetPerformanceTab
               environmentalParams={environmentalParams}
               externalData={externalData}
+              cosmicData={cosmicData}
+              buildingType={buildingType}
+              populationGroup={populationGroup}
+              isCosmicLoading={isCosmicLoading}
             />
           </TabsContent>
 
-          {/* Geographic Micro-Anomaly Detection */}
-          <TabsContent value="geographic" className="space-y-4">
-            {externalData.location ? (
-              <GeographicMicroAnomalyPanel
-                latitude={externalData.location.lat}
-                longitude={externalData.location.lon}
-                location={externalData.location.city}
-              />
-            ) : (
-              <div className="text-center py-12">
-                <MapPin className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                  Location Data Loading
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Acquiring geographic coordinates for micro-anomaly detection...
-                </p>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Asset-Specific Intelligence */}
-          <TabsContent value="assets" className="space-y-4">
-            {externalData.location ? (
-              <AssetLearningPanel
-                buildingType={buildingType}
-                location={{ lat: externalData.location.lat, lon: externalData.location.lon }}
-                currentConditions={environmentalParams}
-              />
-            ) : (
-              <div className="text-center py-12">
-                <Building className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                  Asset Intelligence Loading
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Initializing asset fingerprinting and vulnerability analysis...
-                </p>
-              </div>
-            )}
+          <TabsContent value="analytics" className="space-y-6">
+            <AnalyticsTrendsTab
+              environmentalParams={environmentalParams}
+              externalData={externalData}
+              cosmicData={cosmicData}
+              buildingType={buildingType}
+              populationGroup={populationGroup}
+              isCosmicLoading={isCosmicLoading}
+            />
           </TabsContent>
         </Tabs>
       </div>

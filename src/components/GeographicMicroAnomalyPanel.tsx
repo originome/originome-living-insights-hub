@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -39,71 +40,13 @@ export const GeographicMicroAnomalyPanel: React.FC<GeographicMicroAnomalyPanelPr
         setMicroAnomalies(anomalies);
       } catch (error) {
         console.error('Failed to fetch satellite data:', error);
-        // Generate demo data for prototype
-        generateDemoData();
       } finally {
         setIsLoading(false);
       }
     };
 
-    const generateDemoData = () => {
-      // Generate realistic demo satellite data
-      const demoSatelliteData: SatelliteData = {
-        ndvi: 0.45 + Math.random() * 0.3,
-        lst: 18 + Math.random() * 15,
-        aerosolOpticalDepth: 0.1 + Math.random() * 0.2,
-        no2TroposphericColumn: (2 + Math.random() * 8) * 1e15,
-        uvIndex: Math.max(0, 5 + (Math.random() * 6)),
-        surfaceReflectance: 0.1 + (Math.random() * 0.4),
-        cloudCover: Math.random() * 100,
-        precipitationRate: Math.random() * 5,
-        source: 'NASA MODIS/Landsat Fusion',
-        timestamp: new Date()
-      };
-      setSatelliteData(demoSatelliteData);
-
-      // Generate demo micro-anomalies
-      const demoAnomalies: MicroAnomalyData[] = [
-        {
-          anomalyType: 'thermal',
-          severity: 'high',
-          riskScore: 78,
-          confidence: 87,
-          spatialResolution: 30,
-          temporalPattern: 'Increasing thermal signature over past 6 hours',
-          affectedRadius: 250,
-          predictedDuration: 4
-        },
-        {
-          anomalyType: 'vegetation',
-          severity: 'moderate',
-          riskScore: 45,
-          confidence: 72,
-          spatialResolution: 10,
-          temporalPattern: 'Gradual vegetation stress detected',
-          affectedRadius: 150,
-          predictedDuration: 8
-        },
-        {
-          anomalyType: 'atmospheric',
-          severity: 'critical',
-          riskScore: 92,
-          confidence: 95,
-          spatialResolution: 50,
-          temporalPattern: 'Rapid atmospheric pressure change',
-          affectedRadius: 500,
-          predictedDuration: 2
-        }
-      ];
-      setMicroAnomalies(demoAnomalies);
-    };
-
     if (latitude && longitude) {
       fetchSatelliteData();
-      
-      // Refresh data every 5 minutes for demo
-      const interval = setInterval(fetchSatelliteData, 5 * 60 * 1000);
-      return () => clearInterval(interval);
     }
   }, [latitude, longitude]);
 
@@ -179,7 +122,7 @@ export const GeographicMicroAnomalyPanel: React.FC<GeographicMicroAnomalyPanelPr
                 <div className="text-xs text-blue-500">Land Surface</div>
               </div>
               <div className="text-center">
-                <div className="font-bold text-lg text-blue-700">
+                <div className="font-bol text-lg text-blue-700">
                   {satelliteData.aerosolOpticalDepth.toFixed(3)}
                 </div>
                 <div className="text-blue-600">AOD</div>
@@ -256,19 +199,19 @@ export const GeographicMicroAnomalyPanel: React.FC<GeographicMicroAnomalyPanelPr
         </Card>
       )}
 
-      {/* Interactive Mapping */}
+      {/* Interactive Mapping Placeholder */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-gray-600" />
             Interactive Environmental Hot-Spot Map
           </CardTitle>
-          <div className="text-sm text-gray-600">
+           <div className="text-sm text-gray-600">
             Hyperlocal environmental anomalies visualized. Click circles for details.
           </div>
         </CardHeader>
         <CardContent>
-          <InteractiveMap
+           <InteractiveMap
             latitude={latitude}
             longitude={longitude}
             anomalies={microAnomalies}
