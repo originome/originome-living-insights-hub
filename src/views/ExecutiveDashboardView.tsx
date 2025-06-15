@@ -3,6 +3,7 @@ import React from 'react';
 import { ExecutivePatternBanner } from '@/components/ExecutivePatternBanner';
 import { ExecutiveDashboard } from '@/components/ExecutiveDashboard';
 import { ScientificROISection } from '@/components/ScientificROISection';
+import { SystemIntelligenceHeader } from '@/components/SystemIntelligenceHeader';
 import { useApiIntegration } from '@/hooks/useApiIntegration';
 import { useCosmicData } from '@/hooks/useCosmicData';
 import { useEnvironmentalParams } from '@/hooks/useEnvironmentalParams';
@@ -41,15 +42,33 @@ const ExecutiveDashboardView: React.FC = () => {
   );
 
   return (
-    <div className="space-y-8">
-      {/* Hero Pattern Banner - Most Prominent */}
+    <div className="space-y-6">
+      {/* System Intelligence Platform Header */}
+      <SystemIntelligenceHeader
+        location={location}
+        buildingType={buildingType}
+        populationGroup={populationGroup}
+        lastUpdated={lastUpdated}
+        cosmicLastUpdated={cosmicLastUpdated}
+        onLocationChange={handleLocationChange}
+        onBuildingTypeChange={handleBuildingTypeChange}
+        onPopulationGroupChange={handlePopulationGroupChange}
+        onRefresh={() => {
+          refreshData();
+          refreshCosmicData();
+        }}
+      />
+
+      {/* Hero Pattern Intelligence Engine - Most Prominent */}
       <ExecutivePatternBanner
         environmentalParams={environmentalParams}
         externalData={externalData}
         cosmicData={cosmicData}
+        buildingType={buildingType}
+        populationGroup={populationGroup}
       />
 
-      {/* Streamlined Executive Summary */}
+      {/* Strategic Business Intelligence Dashboard */}
       <ExecutiveDashboard
         environmentalParams={environmentalParams}
         externalData={externalData}
@@ -58,12 +77,13 @@ const ExecutiveDashboardView: React.FC = () => {
         populationGroup={populationGroup}
       />
 
-      {/* ROI Demonstration - Business Focus */}
+      {/* ROI & Strategic Value Demonstration */}
       <ScientificROISection
         environmentalParams={environmentalParams}
         externalData={externalData}
         cosmicData={cosmicData}
         buildingType={buildingType}
+        occupantCount={100}
       />
     </div>
   );
