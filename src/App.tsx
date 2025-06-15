@@ -16,6 +16,7 @@ import { useLocationState } from "./hooks/useLocationState";
 import { useApiIntegration } from "./hooks/useApiIntegration";
 import { useCosmicData } from "./hooks/useCosmicData";
 import { useEnvironmentalParams } from "./hooks/useEnvironmentalParams";
+import { SharedViewProps } from "./types/viewProps";
 
 // Create QueryClient with proper configuration for real-time data
 const queryClient = new QueryClient({
@@ -29,6 +30,12 @@ const queryClient = new QueryClient({
 });
 
 export type TabType = 'executive' | 'event-horizon' | 'velocity' | 'geographic' | 'assets';
+
+// Create wrapper components that accept SharedViewProps
+const EventHorizonViewWrapper: React.FC<SharedViewProps> = (props) => <EventHorizonView {...props} />;
+const EnvironmentalVelocityViewWrapper: React.FC<SharedViewProps> = (props) => <EnvironmentalVelocityView {...props} />;
+const GeographicIntelligenceViewWrapper: React.FC<SharedViewProps> = (props) => <GeographicIntelligenceView {...props} />;
+const AssetIntelligenceViewWrapper: React.FC<SharedViewProps> = (props) => <AssetIntelligenceView {...props} />;
 
 const App = () => {
   const [activeTab, setActiveTab] = useState<TabType>('executive');
@@ -93,7 +100,7 @@ const App = () => {
 
   const renderActiveView = () => {
     // Pass shared context to all views
-    const sharedProps = {
+    const sharedProps: SharedViewProps = {
       location,
       buildingType,
       populationGroup,
@@ -111,13 +118,13 @@ const App = () => {
       case 'executive':
         return <ExecutiveDashboardView {...sharedProps} />;
       case 'event-horizon':
-        return <EventHorizonView {...sharedProps} />;
+        return <EventHorizonViewWrapper {...sharedProps} />;
       case 'velocity':
-        return <EnvironmentalVelocityView {...sharedProps} />;
+        return <EnvironmentalVelocityViewWrapper {...sharedProps} />;
       case 'geographic':
-        return <GeographicIntelligenceView {...sharedProps} />;
+        return <GeographicIntelligenceViewWrapper {...sharedProps} />;
       case 'assets':
-        return <AssetIntelligenceView {...sharedProps} />;
+        return <AssetIntelligenceViewWrapper {...sharedProps} />;
       default:
         return <ExecutiveDashboardView {...sharedProps} />;
     }

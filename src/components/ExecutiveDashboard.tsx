@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +13,12 @@ interface ExecutiveDashboardProps {
   cosmicData: CosmicData | null;
   buildingType: string;
   populationGroup: string;
+  location: string;
+  systemIntelligence: {
+    riskLevel: string;
+    activeFactors: number;
+    confidence: number;
+  };
 }
 
 export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
@@ -21,7 +26,9 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
   externalData,
   cosmicData,
   buildingType,
-  populationGroup
+  populationGroup,
+  location,
+  systemIntelligence
 }) => {
   // Calculate comprehensive business intelligence
   const getSystemIntelligence = () => {

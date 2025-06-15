@@ -3,26 +3,9 @@ import React from 'react';
 import { ExecutivePatternBanner } from '@/components/ExecutivePatternBanner';
 import { ExecutiveDashboard } from '@/components/ExecutiveDashboard';
 import { ScientificROISection } from '@/components/ScientificROISection';
+import { SharedViewProps } from '@/types/viewProps';
 
-interface ExecutiveDashboardViewProps {
-  location: string;
-  buildingType: string;
-  populationGroup: string;
-  environmentalParams: any;
-  externalData: any;
-  cosmicData: any;
-  isLoading: boolean;
-  isCosmicLoading: boolean;
-  systemIntelligence: {
-    riskLevel: string;
-    activeFactors: number;
-    confidence: number;
-  };
-  onParamChange: (param: string, value: number) => void;
-  onRefresh: () => void;
-}
-
-const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
+const ExecutiveDashboardView: React.FC<SharedViewProps> = ({
   location,
   buildingType,
   populationGroup,
