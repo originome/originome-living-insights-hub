@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Server, Zap, Calendar, AlertCircle, TrendingUp } from "lucide-react";
+import { Server, Zap, Calendar, AlertCircle, TrendingUp, Fingerprint } from "lucide-react";
 import AssetCard from "../components/visualization/AssetCard";
 
 interface AssetFingerprint {
@@ -16,10 +16,14 @@ interface AssetFingerprint {
   riskScore: number;
   healthStatus: 'optimal' | 'good' | 'degraded' | 'critical';
   vulnerabilitySignature: {
-    primaryTriggers: string[];
-    riskConditions: string[];
+    narrative: string;
+    factors: Array<{
+      domain: 'Space Weather' | 'Grid' | 'Environmental' | 'Operational';
+      parameter: string;
+      condition: string;
+    }>;
     failurePattern: string;
-    historicalEvents: number;
+    resilience: string[];
   };
   environmentalSensitivity: {
     temperature: { min: number; max: number; optimal: number };
@@ -58,6 +62,27 @@ const AssetIntelligenceView: React.FC = () => {
         const manufactureYear = 2015 + Math.floor(Math.random() * 8);
         const healthStatus = healthStatuses[Math.floor(Math.random() * healthStatuses.length)];
         
+        const signatures = [
+          {
+            narrative: 'This asset exhibits a unique vulnerability to compound stress events where solar wind speed exceeds 600 km/s while local grid frequency dips below 59.97 Hz.',
+            factors: [
+              { domain: 'Space Weather', parameter: 'Solar Wind Speed', condition: '> 600 km/s' },
+              { domain: 'Grid', parameter: 'Frequency', condition: '< 59.97 Hz' },
+            ],
+            failurePattern: 'Sudden cascading electronic failure under compound stress.',
+            resilience: ['High thermal tolerance', 'Immune to humidity shifts'],
+          },
+          {
+            narrative: 'Vulnerability is triggered by rapid atmospheric pressure drops (> 4 hPa/hr) occurring during periods of high internal vibration (> 0.5g).',
+            factors: [
+              { domain: 'Environmental', parameter: 'Pressure Drop Rate', condition: '> 4 hPa/hr' },
+              { domain: 'Operational', parameter: 'Internal Vibration', condition: '> 0.5g' },
+            ],
+            failurePattern: 'Seal and gasket failure leading to gradual performance degradation.',
+            resilience: ['Stable under electromagnetic interference'],
+          }
+        ];
+        
         return {
           id: `asset-${index + 1}`,
           name: `${type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Unit ${String(index + 1).padStart(3, '0')}`,
@@ -67,21 +92,7 @@ const AssetIntelligenceView: React.FC = () => {
           location: locations[index % locations.length],
           riskScore: Math.floor(Math.random() * 100),
           healthStatus,
-          vulnerabilitySignature: {
-            primaryTriggers: [
-              'Solar wind speed > 600 km/s',
-              'Local humidity < 30%',
-              'Temperature differential > 15°C',
-              'Atmospheric pressure drop > 5 hPa/hour'
-            ].slice(0, Math.floor(Math.random() * 3) + 2),
-            riskConditions: [
-              'High electromagnetic activity AND low humidity',
-              'Rapid temperature change during peak load',
-              'Compound weather patterns with operational stress'
-            ],
-            failurePattern: 'Gradual degradation accelerating under compound stress conditions',
-            historicalEvents: Math.floor(Math.random() * 12)
-          },
+          vulnerabilitySignature: signatures[index % signatures.length],
           environmentalSensitivity: {
             temperature: { min: 5, max: 45, optimal: 22 },
             humidity: { min: 20, max: 80, optimal: 45 },
@@ -157,13 +168,13 @@ const AssetIntelligenceView: React.FC = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Server className="h-6 w-6 text-emerald-600" />
+              <Fingerprint className="h-6 w-6 text-emerald-600" />
               <div>
                 <CardTitle className="text-xl text-emerald-900">
-                  Asset Intelligence - Legacy System Fingerprinting
+                  Asset Intelligence - Vulnerability Fingerprinting
                 </CardTitle>
                 <p className="text-emerald-700 text-sm">
-                  Personalized risk signatures • Predictive maintenance • Environmental vulnerability mapping
+                  Cross-domain risk signatures • Predictive failure analysis • Non-obvious vulnerability mapping
                 </p>
               </div>
             </div>

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Activity, Zap } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Zap, BrainCircuit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import VelocityChart from "../components/visualization/VelocityChart";
 
-interface VelocityData {
+interface VelocityPattern {
   parameter: string;
+  description: string;
   currentValue: number;
   velocity: number; // First derivative (rate of change)
   acceleration: number; // Second derivative
@@ -22,7 +23,7 @@ interface VelocityData {
 }
 
 const EnvironmentalVelocityView: React.FC = () => {
-  const [velocityData, setVelocityData] = useState<VelocityData[]>([]);
+  const [velocityData, setVelocityData] = useState<VelocityPattern[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -39,74 +40,80 @@ const EnvironmentalVelocityView: React.FC = () => {
         });
       };
 
-      const demoData: VelocityData[] = [
+      const demoData: VelocityPattern[] = [
         {
-          parameter: 'CO₂ Concentration',
+          parameter: 'Cognitive Fatigue Risk Velocity',
+          description: 'Rate-of-change in CO₂ concentration',
           currentValue: 418.7,
           velocity: 2.3,
           acceleration: 0.12,
           unit: 'ppm',
-          velocityUnit: 'ppm/hour',
+          velocityUnit: 'ppm/hr (dCO₂/dt)',
           riskLevel: 'moderate',
           trend: 'increasing',
           alertThreshold: 3.0,
           historicalData: generateTimeSeries(418, 2.5)
         },
         {
-          parameter: 'PM2.5 Particles',
+          parameter: 'Respiratory Irritant Acceleration',
+          description: 'Acceleration of PM2.5 particle concentration',
           currentValue: 35.2,
           velocity: -1.8,
           acceleration: -0.34,
           unit: 'μg/m³',
-          velocityUnit: 'μg/m³/hour',
+          velocityUnit: 'μg/m³/hr (dPM/dt)',
           riskLevel: 'high',
           trend: 'decreasing',
           alertThreshold: 2.5,
           historicalData: generateTimeSeries(35, 4.2)
         },
         {
-          parameter: 'Temperature',
+          parameter: 'Mechanical Stress Index',
+          description: 'Rate-of-change in thermal differential',
           currentValue: 23.4,
           velocity: 0.8,
           acceleration: 0.05,
           unit: '°C',
-          velocityUnit: '°C/hour',
+          velocityUnit: '°C/hr (dTemp/dt)',
           riskLevel: 'low',
           trend: 'increasing',
           alertThreshold: 1.2,
           historicalData: generateTimeSeries(23, 1.5)
         },
         {
-          parameter: 'Humidity',
+          parameter: 'Corrosion/Mold Risk Acceleration',
+          description: 'Acceleration of atmospheric humidity',
           currentValue: 67.3,
           velocity: 4.2,
           acceleration: 0.67,
           unit: '%',
-          velocityUnit: '%/hour',
+          velocityUnit: '%/hr (dHum/dt)',
           riskLevel: 'critical',
           trend: 'increasing',
           alertThreshold: 3.5,
           historicalData: generateTimeSeries(67, 5.1)
         },
         {
-          parameter: 'Atmospheric Pressure',
+          parameter: 'Barometric Cascade Trigger',
+          description: 'Velocity of atmospheric pressure change',
           currentValue: 1013.8,
           velocity: -2.1,
           acceleration: -0.28,
           unit: 'hPa',
-          velocityUnit: 'hPa/hour',
+          velocityUnit: 'hPa/hr (dPress/dt)',
           riskLevel: 'moderate',
           trend: 'decreasing',
           alertThreshold: 2.0,
           historicalData: generateTimeSeries(1013, 3.2)
         },
         {
-          parameter: 'Wind Speed',
+          parameter: 'Structural Load Fluctuation',
+          description: 'Rate-of-change in wind speed impacting assets',
           currentValue: 12.7,
           velocity: 1.5,
           acceleration: 0.19,
           unit: 'km/h',
-          velocityUnit: 'km/h²',
+          velocityUnit: 'km/h/hr (dWind/dt)',
           riskLevel: 'low',
           trend: 'stable',
           alertThreshold: 4.0,
@@ -164,13 +171,13 @@ const EnvironmentalVelocityView: React.FC = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <TrendingUp className="h-6 w-6 text-green-600" />
+              <BrainCircuit className="h-6 w-6 text-green-600" />
               <div>
                 <CardTitle className="text-xl text-green-900">
-                  Environmental Velocity Analytics
+                  Derivative Pattern Intelligence
                 </CardTitle>
                 <p className="text-green-700 text-sm">
-                  First-derivative risk detection • Rate-of-change intelligence • Non-obvious pattern recognition
+                  First & second-derivative risk detection • Predictive rate-of-change analysis
                 </p>
               </div>
             </div>
@@ -178,7 +185,7 @@ const EnvironmentalVelocityView: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Zap className="h-5 w-5 text-yellow-500" />
               <Badge variant="outline" className="text-yellow-700 border-yellow-300">
-                Real-time Derivatives
+                Real-time Derivative Engine
               </Badge>
             </div>
           </div>
@@ -195,7 +202,7 @@ const EnvironmentalVelocityView: React.FC = () => {
                   {getTrendIcon(data.trend, data.velocity)}
                   <div>
                     <h3 className="font-semibold text-slate-900">{data.parameter}</h3>
-                    <p className="text-sm text-slate-600">Rate-of-Change Analysis</p>
+                    <p className="text-sm text-slate-600">{data.description}</p>
                   </div>
                 </div>
                 <Badge className={`text-xs ${getRiskColor(data.riskLevel)}`}>
