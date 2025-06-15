@@ -3,9 +3,6 @@ import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { MapPin, Settings } from "lucide-react";
 
 interface MicroAnomaly {
   id: string;
@@ -29,6 +26,9 @@ interface GeoIntelMapProps {
   selectedAnomaly: MicroAnomaly | null;
 }
 
+// Set Mapbox token
+const MAPBOX_TOKEN = 'pk.eyJ1Ijoib3JpZ2lub21lIiwiYSI6ImNtYnd0enNlajB3cnYybXBxMXZhZXl2eXoifQ.pHmSai2O3d9uh4E_xTUPkw';
+
 const GeoIntelMap: React.FC<GeoIntelMapProps> = ({
   center,
   anomalies,
@@ -38,14 +38,12 @@ const GeoIntelMap: React.FC<GeoIntelMapProps> = ({
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState('');
-  const [showTokenInput, setShowTokenInput] = useState(true);
 
   useEffect(() => {
-    if (!mapboxToken || !mapContainer.current) return;
+    if (!mapContainer.current) return;
 
     // Initialize map
-    mapboxgl.accessToken = mapboxToken;
+    mapboxgl.accessToken = MAPBOX_TOKEN;
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -79,10 +77,10 @@ const GeoIntelMap: React.FC<GeoIntelMapProps> = ({
     return () => {
       map.current?.remove();
     };
-  }, [mapboxToken, center]);
+  }, [center]);
 
   useEffect(() => {
-    if (!map.current || !mapboxToken) return;
+    if (!map.current) return;
 
     // Clear existing layers and sources
     if (map.current.getLayer('anomaly-markers')) {
@@ -233,49 +231,7 @@ const GeoIntelMap: React.FC<GeoIntelMapProps> = ({
       });
     }
 
-  }, [anomalies, viewMode, selectedAnomaly, mapboxToken]);
-
-  if (showTokenInput) {
-    return (
-      <Card className="p-6 text-center space-y-4">
-        <div className="space-y-2">
-          <MapPin className="h-12 w-12 text-slate-400 mx-auto" />
-          <h3 className="text-lg font-semibold text-slate-900">
-            Interactive Mapping Requires Mapbox Token
-          </h3>
-          <p className="text-sm text-slate-600">
-            Please enter your Mapbox public token to enable interactive geographic intelligence features.
-            Get your token at{' '}
-            <a 
-              href="https://mapbox.com/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              mapbox.com
-            </a>
-          </p>
-        </div>
-        
-        <div className="space-y-3 max-w-md mx-auto">
-          <Input
-            placeholder="pk.eyJ1IjoieW91ci11c2VybmFtZSIsImEiOiJjbGE..."
-            value={mapboxToken}
-            onChange={(e) => setMapboxToken(e.target.value)}
-            className="font-mono text-xs"
-          />
-          <Button 
-            onClick={() => setShowTokenInput(false)}
-            disabled={!mapboxToken.startsWith('pk.')}
-            className="w-full"
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Initialize Interactive Map
-          </Button>
-        </div>
-      </Card>
-    );
-  }
+  }, [anomalies, viewMode, selectedAnomaly]);
 
   return (
     <div className="relative w-full h-96 rounded-lg overflow-hidden">
