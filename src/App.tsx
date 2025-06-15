@@ -31,12 +31,6 @@ const queryClient = new QueryClient({
 
 export type TabType = 'executive' | 'event-horizon' | 'velocity' | 'geographic' | 'assets';
 
-// Create wrapper components that accept SharedViewProps
-const EventHorizonViewWrapper: React.FC<SharedViewProps> = (props) => <EventHorizonView {...props} />;
-const EnvironmentalVelocityViewWrapper: React.FC<SharedViewProps> = (props) => <EnvironmentalVelocityView {...props} />;
-const GeographicIntelligenceViewWrapper: React.FC<SharedViewProps> = (props) => <GeographicIntelligenceView {...props} />;
-const AssetIntelligenceViewWrapper: React.FC<SharedViewProps> = (props) => <AssetIntelligenceView {...props} />;
-
 const App = () => {
   const [activeTab, setActiveTab] = useState<TabType>('executive');
 
@@ -118,13 +112,13 @@ const App = () => {
       case 'executive':
         return <ExecutiveDashboardView {...sharedProps} />;
       case 'event-horizon':
-        return <EventHorizonViewWrapper {...sharedProps} />;
+        return <EventHorizonView {...sharedProps} />;
       case 'velocity':
-        return <EnvironmentalVelocityViewWrapper {...sharedProps} />;
+        return <EnvironmentalVelocityView {...sharedProps} />;
       case 'geographic':
-        return <GeographicIntelligenceViewWrapper {...sharedProps} />;
+        return <GeographicIntelligenceView {...sharedProps} />;
       case 'assets':
-        return <AssetIntelligenceViewWrapper {...sharedProps} />;
+        return <AssetIntelligenceView {...sharedProps} />;
       default:
         return <ExecutiveDashboardView {...sharedProps} />;
     }

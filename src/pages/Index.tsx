@@ -58,6 +58,26 @@ const Index = () => {
     externalData.location?.lon
   );
 
+  // Calculate system intelligence
+  const getSystemIntelligence = () => {
+    const riskFactors = [];
+    if (environmentalParams.co2 > 800) riskFactors.push('cognitive_decline');
+    if (environmentalParams.pm25 > 25) riskFactors.push('health_risks');
+    if (cosmicData?.geomagnetic?.kpIndex > 4) riskFactors.push('system_sensitivity');
+    
+    const overallRiskLevel = riskFactors.length === 0 ? 'optimal' : 
+                           riskFactors.length <= 1 ? 'low' :
+                           riskFactors.length <= 2 ? 'moderate' : 'high';
+    
+    return {
+      riskLevel: overallRiskLevel,
+      activeFactors: riskFactors.length,
+      confidence: 95 - (riskFactors.length * 5)
+    };
+  };
+
+  const systemIntelligence = getSystemIntelligence();
+
   useEffect(() => {
     if (error) {
       toast({
@@ -133,6 +153,8 @@ const Index = () => {
               cosmicData={cosmicData}
               buildingType={buildingType}
               populationGroup={populationGroup}
+              location={location}
+              systemIntelligence={systemIntelligence}
             />
 
             <ScientificROISection
@@ -140,6 +162,9 @@ const Index = () => {
               externalData={externalData}
               cosmicData={cosmicData}
               buildingType={buildingType}
+              occupantCount={100}
+              location={location}
+              systemIntelligence={systemIntelligence}
             />
           </TabsContent>
 
