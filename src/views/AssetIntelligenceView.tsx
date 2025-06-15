@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -99,6 +98,7 @@ const AssetIntelligenceView: React.FC = () => {
           healthStatus,
           vulnerabilitySignature: {
             ...signature,
+            factors: [...signature.factors], // Fix: Create mutable copy
             primaryTriggers: signature.factors.map(f => f.parameter),
             riskConditions: signature.factors.map(f => `${f.parameter} ${f.condition}`),
             historicalEvents: Math.floor(Math.random() * 5),

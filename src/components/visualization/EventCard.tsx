@@ -27,7 +27,7 @@ interface EventCardProps {
     riskScore: number;
     confidence: number;
     dataSources: Array<{
-      type: 'public' | 'private';
+      type: 'public' | 'private' | 'proprietary';
       name: string;
       icon: string;
     }>;
@@ -152,9 +152,11 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
                       <div key={index} className="flex items-center space-x-2 text-sm">
                         <span className="text-lg">{source.icon}</span>
                         <span className={`px-2 py-1 rounded text-xs ${
-                          source.type === 'public' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                          source.type === 'public' ? 'bg-blue-100 text-blue-700' :
+                          source.type === 'private' ? 'bg-green-100 text-green-700' :
+                          'bg-purple-100 text-purple-700'
                         }`}>
-                          {source.type === 'public' ? 'Public' : 'Private'}
+                          {source.type.charAt(0).toUpperCase() + source.type.slice(1)}
                         </span>
                         <span className="text-slate-700">{source.name}</span>
                       </div>
@@ -265,3 +267,4 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 };
 
 export default EventCard;
+

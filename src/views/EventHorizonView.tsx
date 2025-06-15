@@ -26,7 +26,12 @@ interface RiskEvent {
   
   // For EventCard component compatibility
   description: string;
-  playbook: string[];
+  playbook: Array<{
+      id: string;
+      action: string;
+      completed: boolean;
+      priority: 'high' | 'medium' | 'low';
+  }>;
   estimatedImpact: string;
 }
 
@@ -63,9 +68,9 @@ const EventHorizonView: React.FC = () => {
           // Compatibility fields
           description: 'Pattern identified: Solar wind velocity spike (>700 km/s) is converging with a rapid atmospheric pressure drop. This pattern historically precedes cascade failures in electrical infrastructure by 45-90 minutes.',
           playbook: [
-            'Activate grid-stabilizing protocols immediately',
-            'Pre-position maintenance teams to high-risk substations',
-            'Isolate non-critical loads to preserve grid integrity',
+            { id: '1-1', action: 'Activate grid-stabilizing protocols immediately', completed: false, priority: 'high' },
+            { id: '1-2', action: 'Pre-position maintenance teams to high-risk substations', completed: false, priority: 'high' },
+            { id: '1-3', action: 'Isolate non-critical loads to preserve grid integrity', completed: false, priority: 'medium' },
           ],
           estimatedImpact: 'High risk of regional power grid instability.',
         },
@@ -93,9 +98,9 @@ const EventHorizonView: React.FC = () => {
           // Compatibility fields
           description: 'High-velocity PM2.5 front (δ+15 μg/m³/hour) coupled with low wind shear indicates an imminent, persistent air quality event. This pattern is correlated with a 40% increase in unscheduled absenteeism.',
           playbook: [
-            'Upgrade HVAC filtration to MERV 13 or higher',
-            'Advise remote work for sensitive employee groups',
-            'Reschedule non-essential outdoor operations',
+            { id: '2-1', action: 'Upgrade HVAC filtration to MERV 13 or higher', completed: false, priority: 'high' },
+            { id: '2-2', action: 'Advise remote work for sensitive employee groups', completed: false, priority: 'medium' },
+            { id: '2-3', action: 'Reschedule non-essential outdoor operations', completed: false, priority: 'low' },
           ],
           estimatedImpact: 'Significant impact on workforce productivity.',
         },
@@ -123,9 +128,9 @@ const EventHorizonView: React.FC = () => {
           // Compatibility fields
           description: 'Asset vulnerability fingerprint match: A combination of high humidity (>75%) and micro-vibrations from nearby construction is creating a known failure pattern for 2018-era HVAC units.',
           playbook: [
-            'Inspect HVAC unit 7 for early signs of harmonic fatigue',
-            'Install vibration dampers as a preventative measure',
-            'Divert maintenance resources from low-risk assets',
+            { id: '3-1', action: 'Inspect HVAC unit 7 for early signs of harmonic fatigue', completed: false, priority: 'high' },
+            { id: '3-2', action: 'Install vibration dampers as a preventative measure', completed: false, priority: 'medium' },
+            { id: '3-3', action: 'Divert maintenance resources from low-risk assets', completed: false, priority: 'low' },
           ],
           estimatedImpact: 'Moderate risk of HVAC downtime and repair costs.',
         }
