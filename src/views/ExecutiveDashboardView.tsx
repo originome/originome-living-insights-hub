@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ExecutivePatternBanner } from '@/components/ExecutivePatternBanner';
 import { ExecutiveDashboard } from '@/components/ExecutiveDashboard';
@@ -16,11 +15,11 @@ const ExecutiveDashboardView: React.FC<SharedViewProps> = ({
   isCosmicLoading,
   systemIntelligence,
   onParamChange,
-  onRefresh
+  onRefresh,
+  onTabChange
 }) => {
   return (
     <div className="space-y-6">
-      {/* Hero Pattern Intelligence Engine - Enhanced with System Context */}
       <ExecutivePatternBanner
         environmentalParams={environmentalParams}
         externalData={externalData}
@@ -29,9 +28,9 @@ const ExecutiveDashboardView: React.FC<SharedViewProps> = ({
         populationGroup={populationGroup}
         location={location}
         systemIntelligence={systemIntelligence}
+        onTabChange={onTabChange}
       />
 
-      {/* Strategic Business Intelligence Dashboard - Cross-Domain Integration */}
       <ExecutiveDashboard
         environmentalParams={environmentalParams}
         externalData={externalData}
@@ -42,7 +41,6 @@ const ExecutiveDashboardView: React.FC<SharedViewProps> = ({
         systemIntelligence={systemIntelligence}
       />
 
-      {/* ROI & Strategic Value Demonstration - Network Effect Value */}
       <ScientificROISection
         environmentalParams={environmentalParams}
         externalData={externalData}

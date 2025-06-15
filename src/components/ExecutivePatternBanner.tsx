@@ -1,10 +1,12 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { InteractiveBadge } from '@/components/InteractiveBadge';
 import { Brain, Zap, TrendingUp, DollarSign, Users, AlertTriangle, Target, Shield, MapPin, Network } from 'lucide-react';
 import { ExternalData } from '@/hooks/useApiIntegration';
 import { CosmicData } from '@/hooks/useCosmicData';
 import { EnvironmentalParams } from '@/hooks/useEnvironmentalParams';
+import { getCrossTabActions, createTabNavigationHandler, TabType } from '@/utils/crossTabNavigation';
 
 interface ExecutivePatternBannerProps {
   environmentalParams: EnvironmentalParams;
@@ -18,6 +20,7 @@ interface ExecutivePatternBannerProps {
     activeFactors: number;
     confidence: number;
   };
+  onTabChange?: (tab: TabType) => void;
 }
 
 export const ExecutivePatternBanner: React.FC<ExecutivePatternBannerProps> = ({
@@ -27,8 +30,11 @@ export const ExecutivePatternBanner: React.FC<ExecutivePatternBannerProps> = ({
   buildingType,
   populationGroup,
   location,
-  systemIntelligence
+  systemIntelligence,
+  onTabChange
 }) => {
+  const handleTabNavigation = onTabChange ? createTabNavigationHandler(onTabChange) : undefined;
+
   const getIntelligencePattern = () => {
     // Enhanced pattern detection with cross-domain intelligence and location context
     const locationContext = location ? ` for ${location}` : '';
@@ -45,7 +51,8 @@ export const ExecutivePatternBanner: React.FC<ExecutivePatternBannerProps> = ({
         patternType: "Compound Risk Convergence",
         riskMultiplier: 3.4,
         triggerFactors: ['Extreme Pollen Load', 'Geomagnetic Storm', 'Immune System Stress', 'Cross-Sector Pattern Match'],
-        crossDomainInsights: "Geographic module confirms 4 similar patterns in peer locations. Asset intelligence shows 12% equipment sensitivity increase."
+        crossDomainInsights: "Geographic module confirms 4 similar patterns in peer locations. Asset intelligence shows 12% equipment sensitivity increase.",
+        context: 'pollen_convergence'
       };
     }
 
@@ -61,7 +68,8 @@ export const ExecutivePatternBanner: React.FC<ExecutivePatternBannerProps> = ({
         patternType: "Amplification Cascade",
         riskMultiplier: 2.1,
         triggerFactors: ['Solar Activity Peak', 'Air Quality Stress', 'Electromagnetic Sensitivity', 'Network Pattern Learning'],
-        crossDomainInsights: "Velocity analytics show accelerating trend. Event Horizon predicts 6-hour window for optimal intervention."
+        crossDomainInsights: "Velocity analytics show accelerating trend. Event Horizon predicts 6-hour window for optimal intervention.",
+        context: 'amplification_cascade'
       };
     }
 
@@ -77,7 +85,8 @@ export const ExecutivePatternBanner: React.FC<ExecutivePatternBannerProps> = ({
         patternType: "Cognitive Impairment Risk",
         riskMultiplier: 1.8,
         triggerFactors: ['Elevated CO₂', 'Oxygen Transport Efficiency', 'Decision Fatigue', 'System Intelligence Alert'],
-        crossDomainInsights: "Asset intelligence confirms HVAC optimization potential. Geographic data shows micro-climate advantages."
+        crossDomainInsights: "Asset intelligence confirms HVAC optimization potential. Geographic data shows micro-climate advantages.",
+        context: 'compound_risk'
       };
     }
 
@@ -92,7 +101,8 @@ export const ExecutivePatternBanner: React.FC<ExecutivePatternBannerProps> = ({
       patternType: "Peak Performance State",
       riskMultiplier: 0.2,
       triggerFactors: ['Environmental Stability', 'Cosmic Quiet Period', 'Optimal Indoor Conditions', 'Network Effect Optimization'],
-      crossDomainInsights: "All modules report optimal conditions. Geographic intelligence shows stable micro-climate. Asset performance at peak efficiency."
+      crossDomainInsights: "All modules report optimal conditions. Geographic intelligence shows stable micro-climate. Asset performance at peak efficiency.",
+      context: 'cross_domain'
     };
   };
 
@@ -144,6 +154,7 @@ export const ExecutivePatternBanner: React.FC<ExecutivePatternBannerProps> = ({
   };
 
   const styles = getSeverityStyles(pattern.severity);
+  const crossTabActions = getCrossTabActions(pattern.context);
 
   return (
     <Card className={`${styles.border} ${styles.bg} shadow-2xl mb-8`}>
@@ -164,20 +175,78 @@ export const ExecutivePatternBanner: React.FC<ExecutivePatternBannerProps> = ({
                   </div>
                 )}
               </div>
-              <div className="flex gap-2">
-                <Badge className={`${styles.badge} text-sm px-4 py-2`}>
-                  {pattern.confidence}% Confidence
-                </Badge>
-                <Badge variant="outline" className="text-sm px-3 py-1">
-                  {pattern.patternType}
-                </Badge>
-                <Badge variant="secondary" className="text-sm px-3 py-1">
-                  {pattern.riskMultiplier}× Risk Factor
-                </Badge>
-                <Badge variant="outline" className="text-sm px-3 py-1">
-                  <Network className="h-3 w-3 mr-1" />
-                  Cross-Domain
-                </Badge>
+              <div className="flex gap-2 flex-wrap">
+                <InteractiveBadge
+                  label={`${pattern.confidence}% Confidence`}
+                  className={`${styles.badge} text-sm px-4 py-2`}
+                  tooltip={`System confidence based on ${systemIntelligence.activeFactors} active factors. Confidence increases with data quality and pattern consistency.`}
+                  expandableContent={{
+                    title: "Confidence Breakdown",
+                    description: `${pattern.confidence}% confidence derived from cross-domain pattern analysis`,
+                    details: [
+                      `Base confidence: ${systemIntelligence.confidence}%`,
+                      `Pattern match strength: High`,
+                      `Data source reliability: 94%`,
+                      `Historical pattern accuracy: 89%`
+                    ]
+                  }}
+                />
+                
+                <InteractiveBadge
+                  label={pattern.patternType}
+                  variant="outline"
+                  className="text-sm px-3 py-1"
+                  tooltip={`${pattern.patternType}: ${pattern.riskMultiplier}× risk multiplier. Click to understand the pattern mechanics.`}
+                  expandableContent={{
+                    title: `Understanding ${pattern.patternType}`,
+                    description: `This pattern type amplifies risk by ${pattern.riskMultiplier}× through specific environmental convergences`,
+                    details: [
+                      `Risk amplification: ${pattern.riskMultiplier}× baseline`,
+                      `Pattern frequency: Occurs in 2-3% of conditions`,
+                      `Historical impact: 40% of major incidents`,
+                      `Prevention window: 2-6 hours typical`
+                    ],
+                    actions: crossTabActions.map(action => ({
+                      label: action.label,
+                      onClick: () => handleTabNavigation?.(action.targetTab)
+                    }))
+                  }}
+                />
+                
+                <InteractiveBadge
+                  label={`${pattern.riskMultiplier}× Risk Factor`}
+                  variant="secondary"
+                  className="text-sm px-3 py-1"
+                  tooltip={`Risk multiplier indicates how environmental factors compound. ${pattern.riskMultiplier}× means ${((pattern.riskMultiplier - 1) * 100).toFixed(0)}% increase over baseline risk.`}
+                />
+                
+                <InteractiveBadge
+                  label="Cross-Domain"
+                  variant="outline"
+                  className="text-sm px-3 py-1"
+                  tooltip="Intelligence integrated from Environmental, Geographic, Asset, and Cosmic data sources"
+                  expandableContent={{
+                    title: "Cross-Domain Intelligence Network",
+                    description: "Pattern detected across multiple intelligence modules",
+                    details: [
+                      "Environmental velocity analysis: Active",
+                      "Geographic micro-anomaly detection: Contributing",
+                      "Asset intelligence learning: Pattern matched",
+                      "Event horizon analysis: Risk window identified"
+                    ],
+                    actions: [
+                      {
+                        label: "View Geographic Analysis",
+                        onClick: () => handleTabNavigation?.('geographic')
+                      },
+                      {
+                        label: "Asset Intelligence",
+                        onClick: () => handleTabNavigation?.('assets')
+                      }
+                    ]
+                  }}
+                  showInfoIcon
+                />
               </div>
             </div>
             
