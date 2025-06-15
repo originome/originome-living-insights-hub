@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { Car, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Activity, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import VelocityChart from "../components/visualization/VelocityChart";
