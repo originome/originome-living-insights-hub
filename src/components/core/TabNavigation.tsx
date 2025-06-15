@@ -7,8 +7,7 @@ import {
   Map, 
   Server,
   Clock,
-  Briefcase,
-  Activity
+  Briefcase
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TabType } from "../../App";
@@ -16,88 +15,49 @@ import { TabType } from "../../App";
 interface TabNavigationProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
-  systemIntelligence: {
-    riskLevel: string;
-    activeFactors: number;
-    confidence: number;
-  };
 }
 
-const TabNavigation: React.FC<TabNavigationProps> = ({ 
-  activeTab, 
-  onTabChange, 
-  systemIntelligence 
-}) => {
-  // Dynamic tab content based on system intelligence
-  const getTabBadge = (tabId: TabType) => {
-    const baseRisk = systemIntelligence.activeFactors;
-    
-    switch (tabId) {
-      case 'executive':
-        return systemIntelligence.riskLevel === 'optimal' ? 'Peak Performance' : 'Action Required';
-      case 'event-horizon':
-        return baseRisk > 2 ? `${baseRisk} Critical` : `${baseRisk} Active`;
-      case 'velocity':
-        return 'Real-time';
-      case 'geographic':
-        return baseRisk > 1 ? `${baseRisk * 4} Hotspots` : '2 Hotspots';
-      case 'assets':
-        return '8 Assets';
-      default:
-        return 'Active';
-    }
-  };
-
-  const getTabBadgeVariant = (tabId: TabType) => {
-    if (tabId === 'event-horizon' && systemIntelligence.activeFactors > 2) {
-      return 'destructive' as const;
-    }
-    if (tabId === 'executive' && systemIntelligence.riskLevel === 'optimal') {
-      return 'default' as const;
-    }
-    return 'outline' as const;
-  };
-
+const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
     {
       id: 'executive' as TabType,
-      label: 'Pattern Intelligence Engine',
+      label: 'Executive Dashboard',
       icon: Briefcase,
-      description: 'Strategic Risk Intelligence',
-      badge: getTabBadge('executive'),
-      badgeVariant: getTabBadgeVariant('executive')
+      description: 'Business Intelligence',
+      badge: 'ROI Focus',
+      badgeVariant: 'default' as const
     },
     {
       id: 'event-horizon' as TabType,
       label: 'Event Horizon',
       icon: AlertTriangle,
       description: 'Live Risk Detection',
-      badge: getTabBadge('event-horizon'),
-      badgeVariant: getTabBadgeVariant('event-horizon')
+      badge: '3 Active',
+      badgeVariant: 'destructive' as const
     },
     {
       id: 'velocity' as TabType,
       label: 'Environmental Velocity',
       icon: TrendingUp,
       description: 'Rate-of-Change Analytics',
-      badge: getTabBadge('velocity'),
-      badgeVariant: getTabBadgeVariant('velocity')
+      badge: 'Real-time',
+      badgeVariant: 'default' as const
     },
     {
       id: 'geographic' as TabType,
       label: 'Geographic Intelligence',
       icon: Map,
       description: 'Micro-Anomaly Detection',
-      badge: getTabBadge('geographic'),
-      badgeVariant: getTabBadgeVariant('geographic')
+      badge: '12 Hotspots',
+      badgeVariant: 'outline' as const
     },
     {
       id: 'assets' as TabType,
       label: 'Asset Intelligence',
       icon: Server,
       description: 'Legacy-Asset Fingerprinting',
-      badge: getTabBadge('assets'),
-      badgeVariant: getTabBadgeVariant('assets')
+      badge: '8 Assets',
+      badgeVariant: 'secondary' as const
     }
   ];
 
@@ -138,18 +98,11 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
         })}
       </div>
       
-      <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-        <div className="flex items-center space-x-2">
-          <Clock className="h-3 w-3" />
-          <span>System synchronized: {new Date().toLocaleTimeString()}</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Activity className="h-3 w-3" />
-          <span>Intelligence Network: {systemIntelligence.confidence}% confidence</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span>Cross-domain learning active</span>
-        </div>
+      <div className="mt-4 flex items-center justify-center space-x-2 text-xs text-slate-500">
+        <Clock className="h-3 w-3" />
+        <span>Last updated: {new Date().toLocaleTimeString()}</span>
+        <span>•</span>
+        <span>Next refresh in 28s</span>
       </div>
     </div>
   );

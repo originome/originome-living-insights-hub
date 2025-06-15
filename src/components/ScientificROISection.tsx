@@ -13,12 +13,6 @@ interface ScientificROISectionProps {
   cosmicData: CosmicData | null;
   buildingType: string;
   occupantCount?: number;
-  location: string;
-  systemIntelligence: {
-    riskLevel: string;
-    activeFactors: number;
-    confidence: number;
-  };
 }
 
 export const ScientificROISection: React.FC<ScientificROISectionProps> = ({
@@ -26,9 +20,7 @@ export const ScientificROISection: React.FC<ScientificROISectionProps> = ({
   externalData,
   cosmicData,
   buildingType,
-  occupantCount = 100,
-  location,
-  systemIntelligence
+  occupantCount = 100
 }) => {
   const patternInsight = PatternEngineService.generatePatternOfTheDay(
     environmentalParams,

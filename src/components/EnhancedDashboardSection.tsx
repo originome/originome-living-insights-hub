@@ -17,12 +17,6 @@ interface EnhancedDashboardSectionProps {
   cosmicData: CosmicData | null;
   buildingType: string;
   populationGroup: string;
-  location?: string;
-  systemIntelligence?: {
-    riskLevel: string;
-    activeFactors: number;
-    confidence: number;
-  };
 }
 
 export const EnhancedDashboardSection: React.FC<EnhancedDashboardSectionProps> = ({
@@ -30,9 +24,7 @@ export const EnhancedDashboardSection: React.FC<EnhancedDashboardSectionProps> =
   externalData,
   cosmicData,
   buildingType,
-  populationGroup,
-  location = 'Unknown Location',
-  systemIntelligence = { riskLevel: 'low', activeFactors: 0, confidence: 95 }
+  populationGroup
 }) => {
   // Calculate overall risk level for cascade prevention
   const calculateOverallRisk = () => {
@@ -65,8 +57,6 @@ export const EnhancedDashboardSection: React.FC<EnhancedDashboardSectionProps> =
         cosmicData={cosmicData}
         buildingType={buildingType}
         occupantCount={100}
-        location={location}
-        systemIntelligence={systemIntelligence}
       />
 
       {/* Real-Time Analytics Dashboard */}
