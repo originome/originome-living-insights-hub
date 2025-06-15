@@ -38,6 +38,7 @@ const GeoIntelMap: React.FC<GeoIntelMapProps> = ({
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -52,6 +53,11 @@ const GeoIntelMap: React.FC<GeoIntelMapProps> = ({
       zoom: 12,
       pitch: 45,
       bearing: 0
+    });
+
+    // Wait for style to load before setting mapLoaded to true
+    map.current.on('style.load', () => {
+      setMapLoaded(true);
     });
 
     // Add navigation controls
@@ -80,7 +86,7 @@ const GeoIntelMap: React.FC<GeoIntelMapProps> = ({
   }, [center]);
 
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !mapLoaded) return;
 
     // Clear existing layers and sources
     if (map.current.getLayer('anomaly-markers')) {
@@ -231,7 +237,7 @@ const GeoIntelMap: React.FC<GeoIntelMapProps> = ({
       });
     }
 
-  }, [anomalies, viewMode, selectedAnomaly]);
+  }, [anomalies, viewMode, selectedAnomaly, mapLoaded]);
 
   return (
     <div className="relative w-full h-96 rounded-lg overflow-hidden">
