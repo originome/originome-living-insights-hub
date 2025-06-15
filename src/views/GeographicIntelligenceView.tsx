@@ -1,74 +1,58 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Map, MapPin, Layers, Eye, AlertTriangle } from "lucide-react";
 import GeoIntelMap from "../components/visualization/GeoIntelMap";
-
-interface MicroAnomaly {
-  id: string;
-  latitude: number;
-  longitude: number;
-  type: 'thermal' | 'pollution' | 'atmospheric' | 'electromagnetic';
-  severity: 'low' | 'moderate' | 'high' | 'critical';
-  riskScore: number;
-  description: string;
-  detectedAt: Date;
-  radius: number; // meters
-  confidence: number;
-  compoundFactors: string[];
-}
+import LocationSelector, { DemoLocation } from "../components/controls/LocationSelector";
+import { DemoDataService, MicroAnomaly } from "../services/demoDataService";
 
 const GeographicIntelligenceView: React.FC = () => {
+  const [demoLocations] = useState<DemoLocation[]>(DemoDataService.getDemoLocations());
+  const [selectedLocation, setSelectedLocation] = useState<DemoLocation>(demoLocations[0]);
   const [microAnomalies, setMicroAnomalies] = useState<MicroAnomaly[]>([]);
   const [selectedAnomaly, setSelectedAnomaly] = useState<MicroAnomaly | null>(null);
-  const [mapCenter, setMapCenter] = useState({ lat: 40.7128, lng: -74.0060 }); // NYC default
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'heatmap' | 'markers' | 'compound'>('heatmap');
 
   useEffect(() => {
-    // Generate realistic micro-anomaly data for demonstration
-    const generateMicroAnomalies = () => {
-      const baseLocations = [
-        { lat: 40.7589, lng: -73.9851, area: 'Times Square' },
-        { lat: 40.7505, lng: -73.9934, area: 'Herald Square' },
-        { lat: 40.7614, lng: -73.9776, area: 'Central Park South' },
-        { lat: 40.7282, lng: -73.9942, area: 'Greenwich Village' },
-        { lat: 40.7472, lng: -73.9857, area: 'Chelsea' },
-        { lat: 40.7549, lng: -73.9840, area: 'Theater District' },
-        { lat: 40.7329, lng: -74.0059, area: 'Tribeca' },
-        { lat: 40.7178, lng: -74.0431, area: 'Financial District' }
-      ];
-
-      const anomalyTypes = ['thermal', 'pollution', 'atmospheric', 'electromagnetic'] as const;
-      const severityLevels = ['low', 'moderate', 'high', 'critical'] as const;
-
-      const demoAnomalies: MicroAnomaly[] = baseLocations.map((location, index) => ({
-        id: `anomaly-${index + 1}`,
-        latitude: location.lat + (Math.random() - 0.5) * 0.01,
-        longitude: location.lng + (Math.random() - 0.5) * 0.01,
-        type: anomalyTypes[Math.floor(Math.random() * anomalyTypes.length)],
-        severity: severityLevels[Math.floor(Math.random() * severityLevels.length)],
-        riskScore: Math.floor(Math.random() * 100),
-        description: `Street-level ${anomalyTypes[Math.floor(Math.random() * anomalyTypes.length)]} anomaly detected in ${location.area}`,
-        detectedAt: new Date(Date.now() - Math.random() * 3600000), // Random time within last hour
-        radius: 50 + Math.random() * 200, // 50-250 meters
-        confidence: 70 + Math.random() * 30, // 70-100%
-        compoundFactors: [
-          'High pedestrian density',
-          'Vehicle emission concentration',
-          'Building heat signature',
-          'Atmospheric pressure variation'
-        ].slice(0, Math.floor(Math.random() * 3) + 1)
-      }));
-
-      setMicroAnomalies(demoAnomalies);
-      setIsLoading(false);
+    // Generate industry-specific anomalies when location changes
+    const generateAnomalies = () => {
+      setIsLoading(true);
+      setTimeout(() => {
+        const anomalies = DemoDataService.generateIndustrySpecificAnomalies(selectedLocation);
+        setMicroAnomalies(anomalies);
+        setSelectedAnomaly(null); // Clear selected anomaly when changing locations
+        setIsLoading(false);
+      }, 800);
     };
 
-    setTimeout(generateMicroAnomalies, 1200);
-  }, []);
+    generateAnomalies();
+  }, [selectedLocation]);
+
+  const handleUseCurrentLocation = async () => {
+    setIsLoading(true);
+    const coords = await DemoDataService.useCurrentLocation();
+    
+    if (coords) {
+      // Create a custom location based on current coordinates
+      const customLocation: DemoLocation = {
+        id: 'current-location',
+        name: 'Current Location',
+        city: 'Your Location',
+        region: '',
+        coordinates: coords,
+        industry: 'General',
+        description: 'Your current geographic location'
+      };
+      
+      setSelectedLocation(customLocation);
+    } else {
+      setIsLoading(false);
+      // Could show a toast notification here
+      console.warn('Unable to get current location');
+    }
+  };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -101,10 +85,12 @@ const GeographicIntelligenceView: React.FC = () => {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-slate-900">
-              Scanning Geographic Micro-Anomalies...
+              {selectedLocation.id === 'current-location' 
+                ? 'Processing Your Location...' 
+                : `Scanning ${selectedLocation.industry} Micro-Anomalies...`}
             </h3>
             <p className="text-slate-600">
-              Processing hyperlocal environmental signatures
+              Processing hyperlocal environmental signatures for {selectedLocation.name}
             </p>
           </div>
         </div>
@@ -114,59 +100,74 @@ const GeographicIntelligenceView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Enhanced Header with Location Selector */}
       <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Map className="h-6 w-6 text-purple-600" />
-              <div>
-                <CardTitle className="text-xl text-purple-900">
-                  Geographic Intelligence - Micro-Anomaly Detection
-                </CardTitle>
-                <p className="text-purple-700 text-sm">
-                  Street-level risk mapping • Hyperlocal pattern detection • Compound risk visualization
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="text-right text-sm">
-                <div className="flex items-center space-x-2">
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                  <span className="font-semibold text-red-700">{criticalAnomalies} Critical</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <AlertTriangle className="h-4 w-4 text-orange-500" />
-                  <span className="font-semibold text-orange-700">{highAnomalies} High Risk</span>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Map className="h-6 w-6 text-purple-600" />
+                <div>
+                  <CardTitle className="text-xl text-purple-900">
+                    Geographic Intelligence - Micro-Anomaly Detection
+                  </CardTitle>
+                  <p className="text-purple-700 text-sm">
+                    Street-level risk mapping • Hyperlocal pattern detection • Compound risk visualization
+                  </p>
                 </div>
               </div>
               
-              <div className="flex space-x-2">
-                <Button
-                  variant={viewMode === 'heatmap' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('heatmap')}
-                >
-                  <Layers className="h-4 w-4 mr-1" />
-                  Heatmap
-                </Button>
-                <Button
-                  variant={viewMode === 'markers' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('markers')}
-                >
-                  <MapPin className="h-4 w-4 mr-1" />
-                  Markers
-                </Button>
-                <Button
-                  variant={viewMode === 'compound' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('compound')}
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  Compound
-                </Button>
+              <div className="flex items-center space-x-4">
+                <div className="text-right text-sm">
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle className="h-4 w-4 text-red-500" />
+                    <span className="font-semibold text-red-700">{criticalAnomalies} Critical</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle className="h-4 w-4 text-orange-500" />
+                    <span className="font-semibold text-orange-700">{highAnomalies} High Risk</span>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <Button
+                    variant={viewMode === 'heatmap' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('heatmap')}
+                  >
+                    <Layers className="h-4 w-4 mr-1" />
+                    Heatmap
+                  </Button>
+                  <Button
+                    variant={viewMode === 'markers' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('markers')}
+                  >
+                    <MapPin className="h-4 w-4 mr-1" />
+                    Markers
+                  </Button>
+                  <Button
+                    variant={viewMode === 'compound' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('compound')}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Compound
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Location Selector */}
+            <div className="border-t border-purple-200 pt-4">
+              <LocationSelector
+                locations={demoLocations}
+                selectedLocation={selectedLocation}
+                onLocationChange={setSelectedLocation}
+                onUseCurrentLocation={handleUseCurrentLocation}
+              />
+              <div className="mt-2 text-sm text-purple-700">
+                <strong>Industry Focus:</strong> {selectedLocation.industry} • {selectedLocation.description}
               </div>
             </div>
           </div>
@@ -181,13 +182,13 @@ const GeographicIntelligenceView: React.FC = () => {
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Interactive Risk Mapping</CardTitle>
               <Badge variant="outline" className="text-xs">
-                Live Data • 30m Resolution
+                Live Data • 30m Resolution • {selectedLocation.industry}
               </Badge>
             </div>
           </CardHeader>
           <CardContent>
             <GeoIntelMap
-              center={mapCenter}
+              center={selectedLocation.coordinates}
               anomalies={microAnomalies}
               viewMode={viewMode}
               onAnomalySelect={setSelectedAnomaly}
@@ -254,6 +255,9 @@ const GeographicIntelligenceView: React.FC = () => {
                 <p className="text-sm">
                   Click on a marker or heatmap area to view detailed micro-anomaly information
                 </p>
+                <p className="text-xs mt-2 text-slate-400">
+                  Current view: {selectedLocation.industry} patterns in {selectedLocation.name}
+                </p>
               </div>
             )}
           </CardContent>
@@ -266,12 +270,12 @@ const GeographicIntelligenceView: React.FC = () => {
           { label: 'Total Anomalies', value: microAnomalies.length, color: 'blue' },
           { label: 'Critical Risk Zones', value: criticalAnomalies, color: 'red' },
           { label: 'Average Risk Score', value: Math.round(microAnomalies.reduce((sum, a) => sum + a.riskScore, 0) / microAnomalies.length), color: 'orange' },
-          { label: 'Coverage Area', value: '15.7 km²', color: 'green' }
+          { label: 'Industry Focus', value: selectedLocation.industry, color: 'green' }
         ].map((stat, index) => (
           <Card key={index}>
             <CardContent className="py-4 text-center">
               <div className={`text-2xl font-bold text-${stat.color}-600`}>
-                {stat.value}
+                {typeof stat.value === 'number' ? stat.value : stat.value}
               </div>
               <div className="text-sm text-slate-600">{stat.label}</div>
             </CardContent>
