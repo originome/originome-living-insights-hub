@@ -2,205 +2,161 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Zap, Activity, Radio, AlertTriangle, TrendingUp } from 'lucide-react';
-import { 
-  StreamingAnalyticsService, 
-  StreamingMetrics, 
-  StreamProcessor, 
-  RealTimeAlert 
-} from '@/services/streamingAnalyticsService';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Activity, Pause, Play, Zap } from 'lucide-react';
+import { StreamingAnalyticsService } from '@/services/streamingAnalyticsService';
 
-export const RealTimeStreamingDashboard: React.FC = () => {
-  const [streamingMetrics, setStreamingMetrics] = useState<StreamingMetrics | null>(null);
-  const [streamProcessors, setStreamProcessors] = useState<StreamProcessor[]>([]);
-  const [realtimeAlerts, setRealtimeAlerts] = useState<RealTimeAlert[]>([]);
-  const [isStreaming, setIsStreaming] = useState(false);
+interface RealTimeStreamingDashboardProps {
+  environmentalParams: any;
+  externalData: any;
+  cosmicData: any;
+  buildingType: string;
+  streamingActive: boolean;
+  onToggleStreaming: () => void;
+}
+
+export const RealTimeStreamingDashboard: React.FC<RealTimeStreamingDashboardProps> = ({
+  environmentalParams,
+  externalData,
+  cosmicData,
+  buildingType,
+  streamingActive,
+  onToggleStreaming
+}) => {
+  const [streamingMetrics, setStreamingMetrics] = useState({
+    parametersPerSecond: 0,
+    totalProcessed: 0,
+    latency: 0,
+    accuracy: 0,
+    activeStreams: 0
+  });
+
+  const [realtimeAlerts, setRealtimeAlerts] = useState<any[]>([]);
 
   useEffect(() => {
-    // Initialize streaming analytics
+    // Initialize streaming service
     StreamingAnalyticsService.initializeStreamProcessing();
-    setIsStreaming(true);
 
-    // Update metrics every second
     const interval = setInterval(() => {
-      const metrics = StreamingAnalyticsService.getStreamingMetrics();
-      const processors = StreamingAnalyticsService.getStreamProcessors();
-      const alerts = StreamingAnalyticsService.getRealTimeAlerts();
-
-      setStreamingMetrics(metrics);
-      setStreamProcessors(processors);
-      setRealtimeAlerts(alerts);
+      if (streamingActive) {
+        const metrics = StreamingAnalyticsService.getStreamingMetrics();
+        const alerts = StreamingAnalyticsService.getRealTimeAlerts();
+        
+        setStreamingMetrics(metrics);
+        setRealtimeAlerts(alerts.slice(0, 5)); // Show latest 5 alerts
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [streamingActive]);
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical': return 'text-red-700 bg-red-100 border-red-300';
-      case 'high': return 'text-orange-700 bg-orange-100 border-orange-300';
-      case 'medium': return 'text-yellow-700 bg-yellow-100 border-yellow-300';
-      default: return 'text-blue-700 bg-blue-100 border-blue-300';
-    }
-  };
-
-  const getDataTypeIcon = (dataType: string) => {
-    switch (dataType) {
-      case 'environmental': return '🌍';
-      case 'space_weather': return '🌌';
-      case 'operational': return '⚙️';
-      default: return '📊';
-    }
+  const getLatencyColor = (latency: number) => {
+    if (latency < 3) return 'text-green-600';
+    if (latency < 5) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
   return (
-    <div className="space-y-6">
-      {/* Streaming Status Header */}
-      <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-green-600" />
-            Real-Time Streaming Analytics Engine
-            <Badge variant={isStreaming ? "default" : "secondary"} className="text-xs">
-              {isStreaming ? "LIVE STREAMING" : "OFFLINE"}
+    <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-blue-900">
+            <Activity className="h-5 w-5" />
+            Real-Time Environmental Intelligence Engine
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Badge variant={streamingActive ? "default" : "secondary"}>
+              {streamingActive ? "LIVE" : "PAUSED"}
             </Badge>
-          </CardTitle>
-          <div className="text-sm text-green-600">
-            Enterprise-grade stream processing • 60,000+ parameters/second capacity
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onToggleStreaming}
+              className="h-7"
+            >
+              {streamingActive ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+            </Button>
           </div>
-        </CardHeader>
-        {streamingMetrics && (
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="text-center">
-                <div className="font-bold text-lg text-green-700">
-                  {streamingMetrics.parametersPerSecond.toLocaleString()}
-                </div>
-                <div className="text-green-600">Parameters/Second</div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold text-lg text-green-700">
-                  {streamingMetrics.totalProcessed.toLocaleString()}
-                </div>
-                <div className="text-green-600">Total Processed</div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold text-lg text-green-700">
-                  {streamingMetrics.latency.toFixed(1)}ms
-                </div>
-                <div className="text-green-600">Latency</div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold text-lg text-green-700">
-                  {(streamingMetrics.accuracy * 100).toFixed(1)}%
-                </div>
-                <div className="text-green-600">Accuracy</div>
-              </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {/* Real-Time Metrics Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">
+              {Math.round(streamingMetrics.parametersPerSecond).toLocaleString()}
             </div>
-          </CardContent>
-        )}
-      </Card>
-
-      {/* Active Stream Processors */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Radio className="h-5 w-5 text-blue-600" />
-            Active Data Streams
-          </CardTitle>
-          <div className="text-sm text-blue-600">
-            Real-time data fusion: Environmental • Space Weather • Operational
+            <div className="text-xs text-blue-700">Parameters/sec</div>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {streamProcessors.map((processor) => (
-            <Alert key={processor.streamId} className="border-blue-200 bg-blue-50">
-              <Radio className="h-4 w-4" />
-              <AlertDescription>
-                <div className="flex items-center justify-between mb-2">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-600">
+              {Math.round(streamingMetrics.totalProcessed).toLocaleString()}
+            </div>
+            <div className="text-xs text-green-700">Total Processed</div>
+          </div>
+          <div className="text-center">
+            <div className={`text-2xl font-bold ${getLatencyColor(streamingMetrics.latency)}`}>
+              {streamingMetrics.latency.toFixed(1)}ms
+            </div>
+            <div className="text-xs text-gray-600">Latency</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-purple-600">
+              {Math.round(streamingMetrics.accuracy * 100)}%
+            </div>
+            <div className="text-xs text-purple-700">Accuracy</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-orange-600">
+              {streamingMetrics.activeStreams}
+            </div>
+            <div className="text-xs text-orange-700">Active Streams</div>
+          </div>
+        </div>
+
+        {/* Processing Status */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-blue-800">Processing Status</span>
+            <span className="text-xs text-blue-600">
+              {streamingActive ? 'Real-time processing active' : 'Processing paused'}
+            </span>
+          </div>
+          <Progress 
+            value={streamingActive ? streamingMetrics.accuracy * 100 : 0} 
+            className="h-2"
+          />
+        </div>
+
+        {/* Real-Time Alerts */}
+        {realtimeAlerts.length > 0 && (
+          <div>
+            <div className="text-sm font-medium text-blue-800 mb-2 flex items-center gap-1">
+              <Zap className="h-3 w-3" />
+              Latest Pattern Detections
+            </div>
+            <div className="space-y-1">
+              {realtimeAlerts.map((alert, index) => (
+                <div key={alert.alertId} className="flex items-center justify-between bg-white/50 rounded px-2 py-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{getDataTypeIcon(processor.dataType)}</span>
-                    <div className="font-semibold capitalize">
-                      {processor.dataType.replace('_', ' ')} Stream
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      {processor.processingRate.toLocaleString()}/sec
+                    <Badge 
+                      variant={alert.severity === 'critical' ? 'destructive' : 'outline'} 
+                      className="text-xs h-4"
+                    >
+                      {alert.severity}
                     </Badge>
-                    <Badge variant="default" className="text-xs">
-                      Buffer: {processor.bufferSize}
-                    </Badge>
+                    <span className="text-xs font-medium">{alert.parameter}</span>
                   </div>
+                  <span className="text-xs text-gray-600">
+                    {new Date(alert.timestamp).toLocaleTimeString()}
+                  </span>
                 </div>
-                <div className="text-sm text-blue-700">
-                  <strong>Stream ID:</strong> {processor.streamId} • 
-                  <strong> Last Processed:</strong> {processor.lastProcessed.toLocaleTimeString()}
-                </div>
-              </AlertDescription>
-            </Alert>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Real-Time Alerts */}
-      {realtimeAlerts.length > 0 && (
-        <Card className="border-orange-200 bg-orange-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-800">
-              <AlertTriangle className="h-5 w-5" />
-              Real-Time Environmental Alerts
-            </CardTitle>
-            <div className="text-sm text-orange-600">
-              Immediate response alerts • Processing environmental data as it's created
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-2 max-h-96 overflow-y-auto">
-            {realtimeAlerts.slice(0, 10).map((alert) => (
-              <Alert key={alert.alertId} className={`border-l-4 ${getSeverityColor(alert.severity)}`}>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="font-semibold">{alert.parameter} Alert</div>
-                    <div className="flex gap-2">
-                      <Badge variant="destructive" className="text-xs capitalize">
-                        {alert.severity}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {alert.timestamp.toLocaleTimeString()}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="text-sm">
-                    <strong>Current:</strong> {alert.currentValue.toFixed(1)} • 
-                    <strong> Threshold:</strong> {alert.threshold.toFixed(1)} • 
-                    <strong> Source:</strong> {alert.source}
-                  </div>
-                </AlertDescription>
-              </Alert>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Data Fusion Status */}
-      <Card className="bg-gray-50 border-gray-200">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <div className="text-sm text-gray-700">
-              <strong>Data Fusion Active:</strong> Combining space weather, air quality, and operational streams • 
-              {streamingMetrics?.activeStreams || 0} active streams • 
-              Processing rate: {streamingMetrics?.parametersPerSecond.toLocaleString() || 0}/second
+              ))}
             </div>
           </div>
-          <div className="text-xs text-gray-600 mt-1">
-            Enterprise-grade stream processing • Latency: {streamingMetrics?.latency.toFixed(1) || 0}ms • 
-            Next fusion cycle: ~100ms
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
