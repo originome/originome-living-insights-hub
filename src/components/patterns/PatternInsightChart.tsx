@@ -1,17 +1,16 @@
-
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Brain, TrendingUp } from "lucide-react";
 
 /**
  * Props for a pattern-driven chart that visualizes compound risk intelligence,
- * not raw commodity signals.
+ * removing all raw/commodity metric displays per new spec.
  */
 interface PatternInsightChartProps {
   patternId: string;
-  inputs: Array<{ name: string; value: number; unit: string }>;
   compoundRiskLevel: 'low' | 'moderate' | 'high' | 'critical';
   anomalyDescription: string;
+  timeToImpact?: string;
 }
 
 const riskColors: Record<string, string> = {
@@ -30,36 +29,32 @@ const icons: Record<string, React.ReactNode> = {
 
 const PatternInsightChart: React.FC<PatternInsightChartProps> = ({
   patternId,
-  inputs,
   compoundRiskLevel,
   anomalyDescription,
+  timeToImpact,
 }) => {
   return (
     <div className="space-y-2">
       <div className="flex items-center space-x-3 mb-2">
         {icons[compoundRiskLevel]}
-        <Badge className={`${riskColors[compoundRiskLevel]} text-xs px-2 py-1`}>
-          Compound Risk: {compoundRiskLevel.toUpperCase()}
-        </Badge>
+        <span className={`rounded px-2 py-1 font-semibold text-xs ${riskColors[compoundRiskLevel]}`}>
+          Pattern Risk: {compoundRiskLevel.toUpperCase()}
+        </span>
         <span className="text-xs text-slate-500 font-mono">#{patternId}</span>
       </div>
-      <div className="bg-slate-50 p-3 rounded border border-fuchsia-100 mb-2">
-        <div className="text-xs font-medium uppercase text-fuchsia-600 mb-1 tracking-wide">
-          Input Signal Fusions
+      <div className="bg-gradient-to-br from-fuchsia-50 to-blue-50 p-3 rounded border border-fuchsia-100 mb-2">
+        <div className="text-sm font-semibold uppercase text-fuchsia-700 mb-1 tracking-wide">
+          Pattern Fusion Detected
         </div>
-        <div className="flex flex-wrap gap-3">
-          {inputs.map((input) => (
-            <div key={input.name} className="flex items-center gap-1 bg-white border border-fuchsia-100 rounded px-2 py-1 text-xs shadow-sm">
-              <Brain className="h-3 w-3 text-fuchsia-600" />
-              <span>{input.name}:</span>
-              <span className="font-mono">{input.value}</span>
-              <span className="font-mono text-gray-500">{input.unit}</span>
-            </div>
-          ))}
+        <div className="text-fuchsia-900 font-medium">
+          {anomalyDescription}
         </div>
-      </div>
-      <div className="text-sm text-fuchsia-900 font-semibold">
-        {anomalyDescription}
+        {timeToImpact && (
+          <div className="mt-2 text-xs text-fuchsia-600 font-mono">
+            <span className="font-bold">Time to Impact: </span>
+            {timeToImpact}
+          </div>
+        )}
       </div>
     </div>
   );
