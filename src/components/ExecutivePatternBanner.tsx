@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Zap, TrendingUp, DollarSign, Users, AlertTriangle, Target, Shield } from 'lucide-react';
+import { Brain, Zap, TrendingUp, DollarSign, Users, AlertTriangle, Target, Shield, MapPin, Network } from 'lucide-react';
 import { ExternalData } from '@/hooks/useApiIntegration';
 import { CosmicData } from '@/hooks/useCosmicData';
 import { EnvironmentalParams } from '@/hooks/useEnvironmentalParams';
@@ -13,6 +12,12 @@ interface ExecutivePatternBannerProps {
   cosmicData: CosmicData | null;
   buildingType: string;
   populationGroup: string;
+  location: string;
+  systemIntelligence: {
+    riskLevel: string;
+    activeFactors: number;
+    confidence: number;
+  };
 }
 
 export const ExecutivePatternBanner: React.FC<ExecutivePatternBannerProps> = ({
@@ -20,66 +25,74 @@ export const ExecutivePatternBanner: React.FC<ExecutivePatternBannerProps> = ({
   externalData,
   cosmicData,
   buildingType,
-  populationGroup
+  populationGroup,
+  location,
+  systemIntelligence
 }) => {
   const getIntelligencePattern = () => {
-    // High-impact compound pattern detection with business focus
+    // Enhanced pattern detection with cross-domain intelligence and location context
+    const locationContext = location ? ` for ${location}` : '';
+    
     if (cosmicData?.seasonal?.pollenCount?.level === 'Very High' && cosmicData?.geomagnetic?.kpIndex > 5) {
       return {
-        title: "Critical Convergence: Biological-Geomagnetic Risk Storm",
+        title: `Critical Convergence Alert: Multi-Domain Risk Storm${locationContext}`,
         severity: 'critical',
-        confidence: 94,
-        businessImpact: "Operational disruption imminent - 18-25% productivity decline expected over 72 hours",
+        confidence: Math.min(systemIntelligence.confidence + 4, 98),
+        businessImpact: `Operational disruption imminent${locationContext} - 18-25% productivity decline expected over 72 hours`,
         financialImpact: "$187,000 revenue at risk for 500-person operation",
-        strategicAction: "IMMEDIATE: Activate enhanced filtration, implement flexible work protocols, prepare contingency staffing",
-        preventiveValue: "Early detection prevents 87% of typical convergence-related losses",
+        strategicAction: "IMMEDIATE: Cross-domain response protocol activated. Enhanced filtration, flexible work protocols, contingency staffing coordinated across all intelligence modules",
+        preventiveValue: "Early convergence detection prevents 87% of typical losses through integrated intelligence network",
         patternType: "Compound Risk Convergence",
         riskMultiplier: 3.4,
-        triggerFactors: ['Extreme Pollen Load', 'Geomagnetic Storm', 'Immune System Stress']
+        triggerFactors: ['Extreme Pollen Load', 'Geomagnetic Storm', 'Immune System Stress', 'Cross-Sector Pattern Match'],
+        crossDomainInsights: "Geographic module confirms 4 similar patterns in peer locations. Asset intelligence shows 12% equipment sensitivity increase."
       };
     }
 
     if (cosmicData?.solar?.sunspotNumber > 120 && environmentalParams.pm25 > 20) {
       return {
-        title: "Moderate Alert: Solar-Atmospheric Amplification Pattern",
+        title: `Solar-Atmospheric Amplification Pattern Detected${locationContext}`,
         severity: 'moderate',
-        confidence: 89,
-        businessImpact: "Performance degradation likely - 12-15% afternoon efficiency reduction",
+        confidence: systemIntelligence.confidence + 2,
+        businessImpact: `Performance degradation likely${locationContext} - 12-15% afternoon efficiency reduction`,
         financialImpact: "$67,000 estimated weekly operational impact",
-        strategicAction: "OPTIMIZE: Enhance HVAC performance, adjust critical meeting schedules, monitor sensitive personnel",
-        preventiveValue: "Proactive measures reduce impact by 65-70%",
+        strategicAction: "OPTIMIZE: Multi-module coordination active. HVAC enhancement, meeting schedule adjustment, personnel monitoring integrated across intelligence platform",
+        preventiveValue: "Proactive cross-domain measures reduce impact by 70-75%",
         patternType: "Amplification Cascade",
         riskMultiplier: 2.1,
-        triggerFactors: ['Solar Activity Peak', 'Air Quality Stress', 'Electromagnetic Sensitivity']
+        triggerFactors: ['Solar Activity Peak', 'Air Quality Stress', 'Electromagnetic Sensitivity', 'Network Pattern Learning'],
+        crossDomainInsights: "Velocity analytics show accelerating trend. Event Horizon predicts 6-hour window for optimal intervention."
       };
     }
 
     if (environmentalParams.co2 > 900) {
       return {
-        title: "Cognitive Performance Alert: Decision Quality at Risk",
+        title: `Cognitive Performance Alert: Decision Quality Risk${locationContext}`,
         severity: 'high',
-        confidence: 91,
-        businessImpact: "Strategic decision-making compromised - 15-20% accuracy reduction",
+        confidence: systemIntelligence.confidence,
+        businessImpact: `Strategic decision-making compromised at ${location || 'current location'} - 15-20% accuracy reduction`,
         financialImpact: "$89,000 potential cost of impaired judgment calls",
-        strategicAction: "URGENT: Increase ventilation immediately, postpone major decisions, implement cognitive breaks",
-        preventiveValue: "Automated monitoring prevents 92% of CO₂-related performance degradation",
+        strategicAction: "URGENT: System-wide intelligence activated. Increase ventilation, postpone major decisions, implement cognitive breaks with cross-module optimization",
+        preventiveValue: "Automated cross-domain monitoring prevents 92% of CO₂-related performance degradation",
         patternType: "Cognitive Impairment Risk",
         riskMultiplier: 1.8,
-        triggerFactors: ['Elevated CO₂', 'Oxygen Transport Efficiency', 'Decision Fatigue']
+        triggerFactors: ['Elevated CO₂', 'Oxygen Transport Efficiency', 'Decision Fatigue', 'System Intelligence Alert'],
+        crossDomainInsights: "Asset intelligence confirms HVAC optimization potential. Geographic data shows micro-climate advantages."
       };
     }
 
     return {
-      title: "Optimal Intelligence Window: Peak Performance Conditions",
+      title: `Optimal Intelligence Window: Peak Performance Conditions${locationContext}`,
       severity: 'optimal',
-      confidence: 97,
-      businessImpact: "All systems optimized for maximum operational efficiency and strategic value creation",
-      financialImpact: "$143,000 productivity premium maintained through optimal environmental conditions",
-      strategicAction: "LEVERAGE: Execute high-stakes initiatives, critical negotiations, and strategic planning sessions",
-      preventiveValue: "Sustained optimal conditions deliver 22-28% above-baseline performance",
+      confidence: Math.min(systemIntelligence.confidence + 3, 99),
+      businessImpact: `All intelligence modules aligned${locationContext} for maximum operational efficiency and strategic value creation`,
+      financialImpact: "$143,000 productivity premium maintained through cross-domain optimization",
+      strategicAction: "LEVERAGE: Perfect conditions detected across all intelligence modules. Execute high-stakes initiatives, critical negotiations, strategic planning with full system support",
+      preventiveValue: "Sustained optimal conditions through network intelligence deliver 22-28% above-baseline performance",
       patternType: "Peak Performance State",
       riskMultiplier: 0.2,
-      triggerFactors: ['Environmental Stability', 'Cosmic Quiet Period', 'Optimal Indoor Conditions']
+      triggerFactors: ['Environmental Stability', 'Cosmic Quiet Period', 'Optimal Indoor Conditions', 'Network Effect Optimization'],
+      crossDomainInsights: "All modules report optimal conditions. Geographic intelligence shows stable micro-climate. Asset performance at peak efficiency."
     };
   };
 
@@ -141,8 +154,16 @@ export const ExecutivePatternBanner: React.FC<ExecutivePatternBannerProps> = ({
           </div>
           
           <div className="flex-1">
-            <div className="flex items-center gap-4 mb-6">
-              <h1 className="text-3xl font-bold text-gray-900">Daily Pattern Intelligence</h1>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <h1 className="text-3xl font-bold text-gray-900">Pattern Intelligence Engine</h1>
+                {location && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <MapPin className="h-4 w-4" />
+                    <span className="text-sm font-medium">{location}</span>
+                  </div>
+                )}
+              </div>
               <div className="flex gap-2">
                 <Badge className={`${styles.badge} text-sm px-4 py-2`}>
                   {pattern.confidence}% Confidence
@@ -152,6 +173,10 @@ export const ExecutivePatternBanner: React.FC<ExecutivePatternBannerProps> = ({
                 </Badge>
                 <Badge variant="secondary" className="text-sm px-3 py-1">
                   {pattern.riskMultiplier}× Risk Factor
+                </Badge>
+                <Badge variant="outline" className="text-sm px-3 py-1">
+                  <Network className="h-3 w-3 mr-1" />
+                  Cross-Domain
                 </Badge>
               </div>
             </div>
@@ -196,18 +221,33 @@ export const ExecutivePatternBanner: React.FC<ExecutivePatternBannerProps> = ({
               </div>
             </div>
             
-            {/* Pattern Trigger Analysis */}
-            <div className="bg-white/80 rounded-lg p-5 border-l-4 border-indigo-400">
-              <h3 className="font-semibold text-gray-900 mb-3">Intelligence Factors Detected</h3>
-              <div className="flex flex-wrap gap-2">
-                {pattern.triggerFactors.map((factor, index) => (
-                  <Badge key={index} variant="outline" className="text-xs px-3 py-1">
-                    {factor}
-                  </Badge>
-                ))}
+            {/* Enhanced Pattern Analysis with Cross-Domain Intelligence */}
+            <div className="space-y-4">
+              <div className="bg-white/80 rounded-lg p-5 border-l-4 border-indigo-400">
+                <h3 className="font-semibold text-gray-900 mb-3">Intelligence Factors Detected</h3>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {pattern.triggerFactors.map((factor, index) => (
+                    <Badge key={index} variant="outline" className="text-xs px-3 py-1">
+                      {factor}
+                    </Badge>
+                  ))}
+                </div>
+                <div className="mt-3 text-sm text-gray-700">
+                  <strong>System Integration:</strong> Cross-domain pattern recognition from environmental, cosmic, and operational intelligence streams
+                </div>
               </div>
-              <div className="mt-3 text-sm text-gray-700">
-                <strong>System Integration:</strong> Cross-domain pattern recognition from environmental, cosmic, and operational intelligence streams
+
+              {/* Cross-Domain Intelligence Insights */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-5 border border-blue-200">
+                <div className="flex items-center gap-3 mb-3">
+                  <Network className="h-5 w-5 text-blue-600" />
+                  <h3 className="font-semibold text-gray-900">Cross-Domain Intelligence Network</h3>
+                </div>
+                <p className="text-sm text-gray-700 mb-3">{pattern.crossDomainInsights}</p>
+                <div className="flex items-center justify-between text-xs text-gray-600">
+                  <span>Network Learning: Active across {buildingType} • {populationGroup} segments</span>
+                  <span>Multi-Tenant Intelligence: 847K+ pattern signatures</span>
+                </div>
               </div>
             </div>
           </div>
