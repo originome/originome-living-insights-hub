@@ -1,11 +1,15 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock, Target, DollarSign, ArrowRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock, Target, DollarSign, ArrowRight, Info, MapPin } from 'lucide-react';
 import InteractivePlaybook from '@/components/interactive/InteractivePlaybook';
+import HurricaneVelocityMap from '@/components/hurricane/HurricaneVelocityMap';
+import PreLandfallPlaybook from '@/components/hurricane/PreLandfallPlaybook';
 import { TabType } from '../App';
+import { useHurricaneVelocityData } from '../hooks/useHurricaneVelocityData';
 
 interface ExecutiveDashboardViewProps {
   dateRange: string;
@@ -14,291 +18,173 @@ interface ExecutiveDashboardViewProps {
   onTabChange: (tab: TabType) => void;
 }
 
-interface PlaybookAction {
-  id: string;
-  title: string;
-  description: string;
-  priority: 'critical' | 'high' | 'medium' | 'low';
-  estimatedTime: string;
-  estimatedCost?: string;
-  responsible: string;
-  completed: boolean;
-}
-
 const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
   dateRange,
   location,
   assetFilter,
   onTabChange
 }) => {
-  const [playbookActions, setPlaybookActions] = useState([
-    {
-      id: "ventilation-upgrade",
-      title: "Immediate Ventilation Enhancement",
-      description: "Increase fresh air intake by 40% and optimize HVAC filtration to reduce CO₂ concentration below 800ppm threshold.",
-      priority: "critical" as const,
-      estimatedTime: "2-4 hours",
-      estimatedCost: "$1,200",
-      responsible: "Facilities Team",
-      completed: false
-    },
-    {
-      id: "air-quality-monitoring",
-      title: "Deploy Advanced Air Quality Sensors",
-      description: "Install continuous PM2.5 and VOC monitoring throughout facility to enable real-time environmental optimization.",
-      priority: "high" as const,
-      estimatedTime: "1-2 days",
-      estimatedCost: "$3,500",
-      responsible: "IT & Facilities",
-      completed: false
-    },
-    {
-      id: "schedule-optimization",
-      title: "Optimize Meeting Schedules",
-      description: "Reschedule high-cognitive demand activities during optimal environmental windows (10AM-2PM).",
-      priority: "medium" as const,
-      estimatedTime: "30 minutes",
-      responsible: "HR & Management",
-      completed: false
-    },
-    {
-      id: "space-weather-alerts",
-      title: "Implement Space Weather Monitoring",
-      description: "Set up automated alerts for geomagnetic events that may affect sensitive operations and staff wellbeing.",
-      priority: "medium" as const,
-      estimatedTime: "4-6 hours",
-      estimatedCost: "$800",
-      responsible: "IT Team",
-      completed: false
+  const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
+  const [activePlaybook, setActivePlaybook] = useState<string | null>(null);
+  
+  const {
+    vulnerabilityMap,
+    stormData,
+    criticalAlerts,
+    timeToLandfall
+  } = useHurricaneVelocityData(location, assetFilter);
+
+  const handleAssetSelect = (assetId: string) => {
+    setSelectedAsset(assetId);
+    const asset = vulnerabilityMap.find(a => a.id === assetId);
+    if (asset && asset.riskScore >= 70) {
+      setActivePlaybook(asset.recommendedPlaybook);
     }
-  ]);
-
-  // Mock environmental data
-  const environmentalData = {
-    co2: 850,
-    pm25: 28,
-    temperature: 19.5,
-    humidity: 65,
-    pressure: 1012.8
   };
 
-  const getBusinessImpact = () => {
-    const issues = [];
-    if (environmentalData.co2 > 800) issues.push('cognitive_decline');
-    if (environmentalData.pm25 > 25) issues.push('health_risks');
-    if (Math.abs(environmentalData.temperature - 21) > 3) issues.push('comfort_issues');
+  // Hurricane-specific compound pattern intelligence
+  const getGridFailureRisk = () => {
+    const windAcceleration = 8.5; // mph/hr increase
+    const soilSaturation = 78; // %
+    const avgAssetAge = 12; // years
     
-    if (issues.length === 0) return 'peak_performance';
-    if (issues.length <= 1) return 'good_conditions';
-    if (issues.length <= 2) return 'moderate_risk';
-    return 'high_risk';
+    // Compound risk calculation: Wind + Soil + Age
+    const compoundRisk = (windAcceleration * 10) + (soilSaturation * 0.8) + (avgAssetAge * 2);
+    return Math.min(Math.round(compoundRisk), 100);
   };
 
-  const getBusinessInsights = () => {
-    const impact = getBusinessImpact();
-    const insights = {
-      peak_performance: "Your environment is optimized for maximum ROI. Current conditions support 18-23% above-baseline productivity across all operations.",
-      good_conditions: "Business conditions are favorable with minor optimization opportunities. Maintaining current performance levels with 95% reliability.",
-      moderate_risk: "Environmental factors may impact bottom-line performance. Proactive adjustments recommended to maintain competitive advantage.",
-      high_risk: "Multiple risk factors detected. Immediate action required to prevent significant productivity losses and associated revenue impact."
-    };
-    
-    return insights[impact];
-  };
-
-  const getKeyBusinessMetrics = () => {
-    const impact = getBusinessImpact();
-    
-    const metrics = {
-      peak_performance: { productivity: 122, risk: 5, savings: 184000 },
-      good_conditions: { productivity: 108, risk: 15, savings: 89000 },
-      moderate_risk: { productivity: 87, risk: 35, savings: -43000 },
-      high_risk: { productivity: 73, risk: 65, savings: -127000 }
-    };
-    
-    return metrics[impact];
-  };
+  const gridFailureRisk = getGridFailureRisk();
+  const criticalAssets = vulnerabilityMap.filter(asset => asset.riskScore >= 80).length;
 
   const getPatternInsights = () => [
     {
-      id: 'velocity',
-      title: 'Environmental Velocity Alert',
-      description: 'CO₂ concentration rising at 12.5 ppm/hr - above critical threshold',
-      impact: '$28,500 weekly productivity impact',
-      action: 'Immediate ventilation adjustment required',
+      id: 'grid-failure',
+      title: 'Grid Failure Risk - Compound Pattern',
+      description: `${gridFailureRisk}% risk based on wind gust acceleration (8.5 mph/hr), soil saturation (78%), and asset age convergence`,
+      impact: '$2.3M potential equipment loss prevention',
+      action: 'Deploy crews to 12 highest-risk feeders before landfall',
       targetTab: 'velocity' as TabType,
-      severity: 'high'
+      severity: gridFailureRisk >= 80 ? 'critical' : gridFailureRisk >= 60 ? 'high' : 'moderate',
+      dataLineage: {
+        public: 'NOAA Wind-Field Data, NHC Storm Track',
+        private: 'Asset Age Database, Historical Outage Logs',
+        precursor: 'USGS Soil Moisture, Real-Time Tide Gauges'
+      }
     },
     {
-      id: 'geographic',
-      title: 'Geographic Micro-Anomaly',
-      description: 'Hyperlocal particulate surge detected in 78m radius zone',
-      impact: '15% absenteeism risk increase',
-      action: 'Deploy targeted filtration in affected area',
-      targetTab: 'geographic' as TabType,
-      severity: 'critical'
-    },
-    {
-      id: 'asset',
-      title: 'Asset Intelligence Warning',
-      description: 'Transformer Unit 034 showing cascade failure pattern',
-      impact: '72% failure probability within 17 hours',
-      action: 'Schedule immediate maintenance inspection',
+      id: 'cascade-risk',
+      title: 'Transformer Cascade Failure Pattern',
+      description: 'Heat stress + electrical load convergence creates 73% secondary failure risk',
+      impact: '40% faster restoration if prevented',
+      action: 'Pre-stage replacement transformers at 5 key substations',
       targetTab: 'assets' as TabType,
-      severity: 'critical'
+      severity: 'high',
+      dataLineage: {
+        public: 'Day-Ahead Load Forecasts',
+        private: 'Transformer Specifications, Maintenance Records',
+        precursor: 'Real-Time Load Monitoring, Temperature Sensors'
+      }
     }
   ];
 
-  const handlePlaybookToggle = (actionId: string) => {
-    setPlaybookActions(prev => 
-      prev.map(action => 
-        action.id === actionId 
-          ? { ...action, completed: !action.completed }
-          : action
-      )
-    );
-  };
-
-  const impact = getBusinessImpact();
-  const metrics = getKeyBusinessMetrics();
   const patterns = getPatternInsights();
 
-  const getStatusColor = (impact: string) => {
-    switch (impact) {
-      case 'peak_performance': return 'text-green-700 bg-green-50 border-green-200';
-      case 'good_conditions': return 'text-blue-700 bg-blue-50 border-blue-200';
-      case 'moderate_risk': return 'text-orange-700 bg-orange-50 border-orange-200';
-      case 'high_risk': return 'text-red-700 bg-red-50 border-red-200';
-      default: return 'text-gray-700 bg-gray-50 border-gray-200';
-    }
-  };
+  const DataLineageTooltip = ({ pattern }: { pattern: any }) => (
+    <TooltipContent className="bg-white border shadow-lg max-w-sm">
+      <div className="p-3 text-xs space-y-2">
+        <div className="font-semibold text-slate-900">Data Fusion Sources:</div>
+        <div>
+          <span className="font-medium text-blue-600">Public Data:</span>
+          <div className="text-slate-700 ml-2">{pattern.dataLineage.public}</div>
+        </div>
+        <div>
+          <span className="font-medium text-orange-600">Private Asset Data:</span>
+          <div className="text-slate-700 ml-2">{pattern.dataLineage.private}</div>
+        </div>
+        <div>
+          <span className="font-medium text-green-600">Proprietary Precursors:</span>
+          <div className="text-slate-700 ml-2">{pattern.dataLineage.precursor}</div>
+        </div>
+        <div className="pt-1 border-t border-gray-200 text-slate-600">
+          Three-layer fusion creates non-obvious risk insights
+        </div>
+      </div>
+    </TooltipContent>
+  );
 
   return (
     <TooltipProvider>
-      <div className="space-y-8">
-        {/* Executive Summary */}
-        <Card className={`border-l-4 ${getStatusColor(impact)}`}>
+      <div className="space-y-6">
+        {/* Executive Summary with Hurricane Focus */}
+        <Card className={`border-l-4 ${
+          gridFailureRisk >= 80 ? 'border-red-400 bg-red-50' :
+          gridFailureRisk >= 60 ? 'border-orange-400 bg-orange-50' :
+          'border-blue-400 bg-blue-50'
+        }`}>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl flex items-center gap-3">
-                Business Intelligence Summary
+                Hurricane Grid Intelligence
                 <Badge variant="outline" className="text-sm">
-                  {location.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} • {dateRange}
+                  {location.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} • {timeToLandfall} to Landfall
                 </Badge>
               </CardTitle>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-red-600">{criticalAssets}</div>
+                <div className="text-sm font-medium text-slate-600">Critical Assets</div>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
             <p className="text-lg leading-relaxed text-gray-800 mb-4">
-              {getBusinessInsights()}
+              Hurricane Impact Velocity Platform is tracking {vulnerabilityMap.length} critical infrastructure assets. 
+              Real-time data fusion identifies compound failure patterns invisible to traditional storm tracking.
             </p>
           </CardContent>
         </Card>
 
-        {/* Key Business Metrics with Tooltips */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Card className="cursor-help hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <TrendingUp className="h-5 w-5 text-blue-600" />
-                    Productivity Index
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-gray-900 mb-2">
-                    {metrics.productivity}%
-                  </div>
-                  <p className="text-sm text-gray-600">vs. baseline performance</p>
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent className="bg-white border shadow-lg">
-              <div className="p-2 text-sm">
-                <div className="font-semibold mb-1">Calculation Breakdown:</div>
-                <div>• Environmental factors: {impact === 'high_risk' ? '-18%' : '+8%'}</div>
-                <div>• Cognitive load optimization: +12%</div>
-                <div>• Air quality impact: {environmentalData.co2 > 800 ? '-15%' : '+3%'}</div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Card className="cursor-help hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <AlertTriangle className="h-5 w-5 text-orange-600" />
-                    Risk Level
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-gray-900 mb-2">
-                    {metrics.risk}%
-                  </div>
-                  <p className="text-sm text-gray-600">operational risk exposure</p>
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent className="bg-white border shadow-lg">
-              <div className="p-2 text-sm">
-                <div className="font-semibold mb-1">Risk Factors:</div>
-                <div>• Air quality degradation: {environmentalData.co2 > 800 ? '25%' : '5%'}</div>
-                <div>• Temperature variance: {Math.abs(environmentalData.temperature - 21) > 3 ? '15%' : '3%'}</div>
-                <div>• Equipment failure probability: 12%</div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Card className="cursor-help hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <DollarSign className="h-5 w-5 text-green-600" />
-                    Financial Impact
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-3xl font-bold mb-2 ${metrics.savings >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                    ${Math.abs(metrics.savings).toLocaleString()}
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    {metrics.savings >= 0 ? 'annual value creation' : 'potential annual losses'}
-                  </p>
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent className="bg-white border shadow-lg">
-              <div className="p-2 text-sm">
-                <div className="font-semibold mb-1">Impact Sources:</div>
-                <div>• Productivity changes: ${Math.round(metrics.savings * 0.6).toLocaleString()}</div>
-                <div>• Health/absenteeism: ${Math.round(metrics.savings * 0.25).toLocaleString()}</div>
-                <div>• Equipment efficiency: ${Math.round(metrics.savings * 0.15).toLocaleString()}</div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-
-        {/* Interactive Pattern Intelligence Cards */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Today's Pattern Intelligence
-              <Badge variant="outline" className="text-xs">
-                Click to explore
+        {/* Primary Interactive Vulnerability Map */}
+        <Card className="h-[500px]">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center space-x-2">
+              <MapPin className="h-5 w-5 text-blue-600" />
+              <span>Live Asset Vulnerability Map</span>
+              <Badge variant="outline" className="ml-2">
+                Primary Operations Interface
               </Badge>
             </CardTitle>
             <p className="text-sm text-gray-600">
-              AI-detected patterns requiring executive attention - click any card to drill down
+              Click any asset for detailed risk analysis and Pre-Landfall Playbooks
+            </p>
+          </CardHeader>
+          <CardContent className="h-[420px] p-0">
+            <HurricaneVelocityMap
+              vulnerabilityData={vulnerabilityMap}
+              stormTrack={stormData.track}
+              onAssetSelect={handleAssetSelect}
+              selectedAsset={selectedAsset}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Hurricane-Specific Pattern Intelligence */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              Hurricane Pattern Intelligence
+              <Badge variant="outline" className="text-xs">
+                Three-Layer Data Fusion
+              </Badge>
+            </CardTitle>
+            <p className="text-sm text-gray-600">
+              Non-obvious compound patterns detected through fusion of public weather, private asset, and precursor data
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
             {patterns.map((pattern) => (
               <Card 
                 key={pattern.id}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02] border-l-4 ${
+                className={`cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.01] border-l-4 ${
                   pattern.severity === 'critical' ? 'border-red-400 bg-red-50' :
                   pattern.severity === 'high' ? 'border-orange-400 bg-orange-50' :
                   'border-yellow-400 bg-yellow-50'
@@ -322,6 +208,12 @@ const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
                         }`}>
                           {pattern.severity.toUpperCase()}
                         </Badge>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-slate-500 hover:text-slate-700 cursor-help" />
+                          </TooltipTrigger>
+                          <DataLineageTooltip pattern={pattern} />
+                        </Tooltip>
                       </div>
                       
                       <p className="text-sm text-slate-700 mb-2">{pattern.description}</p>
@@ -348,14 +240,15 @@ const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
           </CardContent>
         </Card>
 
-        {/* Interactive Action Playbook */}
-        <InteractivePlaybook
-          title="Executive Action Playbook"
-          description="Strategic interventions to optimize environmental performance and business outcomes"
-          totalImpact="$127,000"
-          actions={playbookActions}
-          onActionToggle={handlePlaybookToggle}
-        />
+        {/* Interactive Pre-Landfall Playbook */}
+        {activePlaybook && selectedAsset && (
+          <PreLandfallPlaybook
+            playbookType={activePlaybook}
+            assetId={selectedAsset}
+            timeToLandfall={timeToLandfall}
+            onClose={() => setActivePlaybook(null)}
+          />
+        )}
       </div>
     </TooltipProvider>
   );

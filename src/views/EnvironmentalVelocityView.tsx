@@ -2,12 +2,15 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle, Zap, MapPin, Clock, Shield } from "lucide-react";
 import { ViewProps } from "../types/viewProps";
 import HurricaneVelocityMap from "../components/hurricane/HurricaneVelocityMap";
 import VulnerabilityRankingPanel from "../components/hurricane/VulnerabilityRankingPanel";
 import PreLandfallPlaybook from "../components/hurricane/PreLandfallPlaybook";
 import VelocityThresholdAlerts from "../components/hurricane/VelocityThresholdAlerts";
+import HurricaneThreatVelocity from "../components/hurricane/HurricaneThreatVelocity";
+import AssetIntelligenceGallery from "../components/hurricane/AssetIntelligenceGallery";
 import { useHurricaneVelocityData } from "../hooks/useHurricaneVelocityData";
 
 const EnvironmentalVelocityView: React.FC<ViewProps> = ({
@@ -17,6 +20,7 @@ const EnvironmentalVelocityView: React.FC<ViewProps> = ({
 }) => {
   const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
   const [activePlaybook, setActivePlaybook] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('map');
   
   const {
     vulnerabilityMap,
@@ -79,40 +83,58 @@ const EnvironmentalVelocityView: React.FC<ViewProps> = ({
         stormData={stormData}
       />
 
-      {/* Main Dashboard Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Interactive Vulnerability Map */}
-        <div className="lg:col-span-2">
-          <Card className="h-[600px]">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center space-x-2">
-                <MapPin className="h-5 w-5 text-blue-600" />
-                <span>Ranked Vulnerability Map</span>
-                <Badge variant="outline" className="ml-2">
-                  Live Asset Intelligence
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="h-[520px] p-0">
-              <HurricaneVelocityMap
+      {/* Main Hurricane Intelligence Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="map">Vulnerability Map</TabsTrigger>
+          <TabsTrigger value="velocity">Threat Velocity</TabsTrigger>
+          <TabsTrigger value="assets">Asset Intelligence</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="map" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Interactive Vulnerability Map */}
+            <div className="lg:col-span-2">
+              <Card className="h-[600px]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center space-x-2">
+                    <MapPin className="h-5 w-5 text-blue-600" />
+                    <span>Ranked Vulnerability Map</span>
+                    <Badge variant="outline" className="ml-2">
+                      Live Asset Intelligence
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="h-[520px] p-0">
+                  <HurricaneVelocityMap
+                    vulnerabilityData={vulnerabilityMap}
+                    stormTrack={stormData.track}
+                    onAssetSelect={handleAssetSelect}
+                    selectedAsset={selectedAsset}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Vulnerability Rankings Panel */}
+            <div>
+              <VulnerabilityRankingPanel
                 vulnerabilityData={vulnerabilityMap}
-                stormTrack={stormData.track}
                 onAssetSelect={handleAssetSelect}
                 selectedAsset={selectedAsset}
               />
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
+        </TabsContent>
 
-        {/* Vulnerability Rankings Panel */}
-        <div>
-          <VulnerabilityRankingPanel
-            vulnerabilityData={vulnerabilityMap}
-            onAssetSelect={handleAssetSelect}
-            selectedAsset={selectedAsset}
-          />
-        </div>
-      </div>
+        <TabsContent value="velocity" className="space-y-6">
+          <HurricaneThreatVelocity stormData={stormData} />
+        </TabsContent>
+
+        <TabsContent value="assets" className="space-y-6">
+          <AssetIntelligenceGallery assets={vulnerabilityMap} />
+        </TabsContent>
+      </Tabs>
 
       {/* Pre-Landfall Playbook */}
       {activePlaybook && selectedAsset && (
