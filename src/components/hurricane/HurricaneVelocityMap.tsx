@@ -244,12 +244,15 @@ const HurricaneVelocityMap: React.FC<HurricaneVelocityMapProps> = ({
       if (e.features && e.features[0]) {
         const feature = e.features[0];
         const assetId = feature.properties?.id;
-        if (assetId) {
+        if (assetId && feature.geometry && feature.geometry.type === 'Point') {
           onAssetSelect(assetId);
+          
+          // Type-cast geometry to Point to access coordinates
+          const pointGeometry = feature.geometry as GeoJSON.Point;
           
           // Create popup
           new mapboxgl.Popup({ offset: 25 })
-            .setLngLat([feature.geometry.coordinates[0], feature.geometry.coordinates[1]])
+            .setLngLat([pointGeometry.coordinates[0], pointGeometry.coordinates[1]])
             .setHTML(`
               <div class="p-3">
                 <h3 class="font-bold text-sm">${feature.properties?.name}</h3>
