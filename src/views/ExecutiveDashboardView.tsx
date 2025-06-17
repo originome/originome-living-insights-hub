@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Brain, Zap, Network, AlertTriangle, Eye, ArrowRight } from 'lucide-react';
+import { Brain, Zap, Network, AlertTriangle, Eye, ArrowRight, CheckCircle2 } from 'lucide-react';
 import InteractivePlaybook from '@/components/interactive/InteractivePlaybook';
 import PatternNetworkVisualization from '@/components/patterns/PatternNetworkVisualization';
 import { TabType } from '../App';
+import { useSharedPatternState } from '../hooks/useSharedPatternState';
 
 interface ExecutiveDashboardViewProps {
   dateRange: string;
@@ -16,28 +17,25 @@ interface ExecutiveDashboardViewProps {
   onTabChange: (tab: TabType) => void;
 }
 
-interface PlaybookAction {
-  id: string;
-  title: string;
-  description: string;
-  priority: 'critical' | 'high' | 'medium' | 'low';
-  estimatedTime: string;
-  estimatedCost?: string;
-  responsible: string;
-  completed: boolean;
-}
-
 const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
   dateRange,
   location,
   assetFilter,
   onTabChange
 }) => {
+  const {
+    patterns,
+    selectedPattern,
+    completedActions,
+    selectPattern,
+    completeAction
+  } = useSharedPatternState();
+
   const [playbookActions, setPlaybookActions] = useState([
     {
-      id: "cascade-prevention",
-      title: "Prevent Barometric-Solar Cascade",
-      description: "Deploy countermeasures for detected pressure-radiation coupling before it amplifies into system-wide failure.",
+      id: "pressure_compensation",
+      title: "Deploy Pressure Compensation Protocol",
+      description: "Counteract barometric-solar cascade amplification",
       priority: "critical" as const,
       estimatedTime: "90 minutes",
       estimatedCost: "$3,200",
@@ -45,9 +43,9 @@ const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
       completed: false
     },
     {
-      id: "tidal-disruption",
-      title: "Neutralize Tidal Interference Pattern",
-      description: "Adjust operational frequency to counteract lunar-induced equipment resonance detected in Grid Sector 7.",
+      id: "frequency_adjustment",
+      title: "Adjust Operational Frequencies",
+      description: "Counter lunar-induced equipment resonance",
       priority: "high" as const,
       estimatedTime: "45 minutes",
       estimatedCost: "$1,800",
@@ -55,9 +53,9 @@ const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
       completed: false
     },
     {
-      id: "biomagnetic-shield",
-      title: "Activate Biomagnetic Shielding Protocol",
-      description: "Initialize countermeasures for geomagnetic-biological stress convergence affecting critical personnel.",
+      id: "biomagnetic_shielding",
+      title: "Activate Biomagnetic Shielding",
+      description: "Protect against geomagnetic-biological coupling",
       priority: "medium" as const,
       estimatedTime: "30 minutes",
       responsible: "Safety Operations",
@@ -65,82 +63,44 @@ const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
     }
   ]);
 
-  const getImpossiblePatterns = () => [
-    {
-      id: 'barometric_solar',
-      title: 'Barometric Pressure × Solar Radiation Cascade',
-      description: 'AI detected impossible correlation: 10.7cm solar flux amplifying pressure drop effects by 340%',
-      confidence: 89,
-      impact: 'Infrastructure failure cascade imminent',
-      action: 'Deploy pressure compensation protocols',
-      targetTab: 'velocity' as TabType,
-      severity: 'critical'
-    },
-    {
-      id: 'lunar_transformer',
-      title: 'Lunar Tidal Forces → Transformer Stress Pattern',
-      description: 'Gravitational micro-variations correlating with equipment failure patterns across 47km radius',
-      confidence: 76,
-      impact: 'Equipment degradation accelerating',
-      action: 'Adjust operational frequencies to counter tidal interference',
-      targetTab: 'assets' as TabType,
-      severity: 'high'
-    },
-    {
-      id: 'geomagnetic_biological',
-      title: 'Geomagnetic Field × Human Performance Coupling',
-      description: 'Kp-index fluctuations creating personnel error rate spikes - pattern invisible to conventional monitoring',
-      confidence: 84,
-      impact: 'Critical decision accuracy compromised',
-      action: 'Activate biomagnetic stress protocols',
-      targetTab: 'geographic' as TabType,
-      severity: 'high'
+  const handlePatternClick = (patternId: string) => {
+    selectPattern(selectedPattern === patternId ? null : patternId);
+    
+    // Navigate to relevant tab based on pattern type
+    const pattern = patterns.find(p => p.id === patternId);
+    if (pattern) {
+      if (pattern.type === 'lunar_transformer' || pattern.type === 'barometric_solar') {
+        onTabChange('assets');
+      } else if (pattern.type === 'geomagnetic_biological') {
+        onTabChange('geographic');
+      }
     }
-  ];
-
-  const getPatternStatus = () => {
-    const criticalPatterns = getImpossiblePatterns().filter(p => p.severity === 'critical').length;
-    if (criticalPatterns > 0) return 'cascade_detected';
-    return 'patterns_active';
   };
 
   const handlePlaybookToggle = (actionId: string) => {
-    setPlaybookActions(prev => 
-      prev.map(action => 
-        action.id === actionId 
-          ? { ...action, completed: !action.completed }
-          : action
-      )
-    );
-  };
-
-  const patterns = getImpossiblePatterns();
-  const status = getPatternStatus();
-
-  const getStatusStyles = (status: string) => {
-    switch (status) {
-      case 'cascade_detected':
-        return {
-          border: 'border-red-500 border-l-8',
-          bg: 'bg-gradient-to-r from-red-50 to-orange-50',
-          text: 'text-red-900'
-        };
-      default:
-        return {
-          border: 'border-blue-500 border-l-8',
-          bg: 'bg-gradient-to-r from-blue-50 to-indigo-50',
-          text: 'text-blue-900'
-        };
+    const action = playbookActions.find(a => a.id === actionId);
+    if (action && !action.completed) {
+      completeAction(actionId);
+      setPlaybookActions(prev => 
+        prev.map(a => 
+          a.id === actionId 
+            ? { ...a, completed: true }
+            : a
+        )
+      );
     }
   };
 
-  const statusStyles = getStatusStyles(status);
+  const criticalPatterns = patterns.filter(p => p.severity === 'critical').length;
+  const avgConfidence = Math.round(
+    patterns.reduce((sum, p) => sum + p.confidence, 0) / patterns.length
+  );
 
   return (
     <TooltipProvider>
       <div className="space-y-8">
         {/* Pattern Intelligence Header */}
-        <Card className={`${statusStyles.border} ${statusStyles.bg} shadow-xl`}>
+        <Card className="border-red-500 border-l-8 bg-gradient-to-r from-red-50 to-orange-50 shadow-xl">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -148,19 +108,19 @@ const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
                   <Brain className="h-8 w-8 text-indigo-600" />
                 </div>
                 <div>
-                  <CardTitle className={`text-2xl font-bold ${statusStyles.text} flex items-center gap-3`}>
-                    Non-Obvious Pattern Intelligence
+                  <CardTitle className="text-2xl font-bold text-red-900 flex items-center gap-3">
+                    Impossible Pattern Intelligence
                     <Badge variant="outline" className="text-sm animate-pulse">
-                      {patterns.length} Impossible Correlations Active
+                      {patterns.length} Active Correlations
                     </Badge>
                   </CardTitle>
-                  <p className={`text-lg ${statusStyles.text} opacity-80`}>
-                    Detecting connections invisible to conventional monitoring systems
+                  <p className="text-lg text-red-900 opacity-80">
+                    Detecting connections invisible to conventional systems
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-4xl font-bold text-indigo-600">87%</div>
+                <div className="text-4xl font-bold text-indigo-600">{avgConfidence}%</div>
                 <div className="text-sm font-medium text-indigo-700">Pattern Confidence</div>
                 <div className="text-xs text-indigo-600 mt-1">Multi-domain Fusion</div>
               </div>
@@ -168,31 +128,35 @@ const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
           </CardHeader>
         </Card>
 
-        {/* Pattern Network Visualization */}
+        {/* Interactive Pattern Network */}
         <Card className="bg-gradient-to-br from-slate-50 to-indigo-50 border-indigo-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Network className="h-6 w-6 text-indigo-600" />
-              Impossible Correlation Network
+              Interactive Correlation Network
             </CardTitle>
             <p className="text-sm text-slate-600">
-              AI-detected connections between seemingly unrelated phenomena
+              Click nodes to explore cross-domain impacts
             </p>
           </CardHeader>
-          <CardContent className="h-[300px] p-0">
-            <PatternNetworkVisualization patterns={patterns} />
+          <CardContent className="h-[350px] p-0">
+            <PatternNetworkVisualization 
+              patterns={patterns} 
+              selectedPattern={selectedPattern}
+              onPatternClick={handlePatternClick}
+            />
           </CardContent>
         </Card>
 
-        {/* Critical Pattern Alerts */}
+        {/* Active Pattern Details */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <Eye className="h-5 w-5 text-indigo-600" />
-              Detection Results
+              Active Pattern Intelligence
             </h2>
             <Badge variant="secondary" className="text-xs">
-              Click to investigate
+              Click to investigate cross-domain impacts
             </Badge>
           </div>
           
@@ -200,10 +164,12 @@ const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
             <Card 
               key={pattern.id}
               className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.01] border-l-4 ${
+                selectedPattern === pattern.id ? 'ring-2 ring-indigo-500 shadow-lg' : ''
+              } ${
                 pattern.severity === 'critical' ? 'border-red-500 bg-red-50 hover:bg-red-100' :
                 'border-orange-500 bg-orange-50 hover:bg-orange-100'
               }`}
-              onClick={() => onTabChange(pattern.targetTab)}
+              onClick={() => handlePatternClick(pattern.id)}
             >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -221,24 +187,28 @@ const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
                       </Badge>
                     </div>
                     
-                    <p className="text-slate-700 mb-4 text-base leading-relaxed">
-                      {pattern.description}
-                    </p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                       <div className="bg-white/70 rounded-lg p-3">
-                        <div className="font-semibold text-slate-900 mb-1">Impact Detected</div>
-                        <div className="text-slate-700">{pattern.impact}</div>
+                        <div className="font-semibold text-slate-900 mb-1">Risk Window</div>
+                        <div className="text-slate-700">{pattern.riskWindow}</div>
                       </div>
                       <div className="bg-white/70 rounded-lg p-3">
-                        <div className="font-semibold text-slate-900 mb-1">Recommended Action</div>
-                        <div className="text-slate-700">{pattern.action}</div>
+                        <div className="font-semibold text-slate-900 mb-1">Affected Assets</div>
+                        <div className="text-slate-700">{pattern.affectedAssets.length} systems</div>
+                      </div>
+                      <div className="bg-white/70 rounded-lg p-3">
+                        <div className="font-semibold text-slate-900 mb-1">Impact Zones</div>
+                        <div className="text-slate-700">{pattern.affectedZones.length} locations</div>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="ml-6">
-                    <ArrowRight className="h-6 w-6 text-slate-400" />
+                  <div className="ml-6 flex flex-col items-center">
+                    {selectedPattern === pattern.id ? (
+                      <CheckCircle2 className="h-6 w-6 text-indigo-600" />
+                    ) : (
+                      <ArrowRight className="h-6 w-6 text-slate-400" />
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -249,7 +219,7 @@ const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
         {/* Interactive Response Playbook */}
         <InteractivePlaybook
           title="Pattern Response Protocols"
-          description="Immediate actions to counteract detected impossible correlations"
+          description="Execute countermeasures to neutralize detected correlations"
           totalImpact="$87,000"
           actions={playbookActions}
           onActionToggle={handlePlaybookToggle}
